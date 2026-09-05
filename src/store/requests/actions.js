@@ -1,5 +1,5 @@
 import axios from "axios";
-import keys from "../../../keys/keys.dev";
+import keys from '@/keys/keys.dev';
 
 export const getallZayavka = async ({ state, commit }) => {
   try {

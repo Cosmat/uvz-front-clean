@@ -1,6 +1,6 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
-import keys from '../keys/keys.dev'
+import keys from '@/keys/keys.dev'
 
 const api = axios.create({ baseURL: keys.BASE_URL })
 

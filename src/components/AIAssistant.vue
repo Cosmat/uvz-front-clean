@@ -190,7 +190,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
-import keys from '../../keys/keys.dev';
+import keys from '@/keys/keys.dev';
 
 export default {
   name: 'AIAssistant',

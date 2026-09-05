@@ -58,7 +58,7 @@ import { computed, onBeforeMount, ref } from "vue";
 import { useStore } from "vuex";
 import zayavkaProfile from "../components/TheZayavkaProfile";
 import CreateZayavka from "../components/createZayavka.vue";
-import keys from "../../keys/keys.dev";
+import keys from '@/keys/keys.dev';
 
 export default {
   components: { zayavkaProfile, CreateZayavka },

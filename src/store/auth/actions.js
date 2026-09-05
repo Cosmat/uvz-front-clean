@@ -1,6 +1,6 @@
 import axios from "axios";
 import { error } from "../../utils/error.js";
-import keys from "../../../keys/keys.dev";
+import keys from '@/keys/keys.dev';
 export const login = async ({ commit, dispatch }, formData) => {
   try {
     const { data } = await axios.post(`${keys.BASE_URL}/admin/login`, {

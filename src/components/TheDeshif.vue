@@ -50,7 +50,7 @@ import poisk_shifr from "src/components/ui/poisk_shifr";
 import { onBeforeMount, ref, computed } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
-import keys from "../../keys/keys.dev";
+import keys from '@/keys/keys.dev';
 export default {
   name: "Deshife",
   components: { poisk_shifr },

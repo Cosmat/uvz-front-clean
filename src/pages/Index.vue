@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import keys from "../../keys/keys.dev";
+import keys from '@/keys/keys.dev';
 // import axios from "src/boot/axios";
 import { api } from 'boot/axios'
 import zayavka from "src/components/ui/Zayavka.vue";

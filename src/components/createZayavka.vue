@@ -182,7 +182,7 @@ import { ref, computed } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 import dayjs from "dayjs";
-import keys from "../../keys/keys.dev";
+import keys from '@/keys/keys.dev';
 
 export default {
   emits: ["createZayavka", "chancel", "del"],
