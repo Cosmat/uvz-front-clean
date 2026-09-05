@@ -62,6 +62,9 @@ module.exports = configure(function (ctx) {
       // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
       chainWebpack(chain) {
         chain.resolve.alias.set("@", path.resolve(__dirname, "src"))
+        chain.plugin("provide").use(require("webpack").ProvidePlugin, [{
+          process: "process/browser"
+        }])
       },
 
       // Options below are automatically set depending on the env, set them if you want to override
