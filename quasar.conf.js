@@ -5,8 +5,8 @@
 
 // Configuration for your app
 // https://quasar.dev/quasar-cli/quasar-conf-js
-
 const { configure } = require("quasar/wrappers");
+const path = require("path");
 
 module.exports = configure(function (ctx) {
   return {
@@ -33,7 +33,6 @@ module.exports = configure(function (ctx) {
       // 'themify',
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
-
       "roboto-font", // optional, you are not bound to it
       "material-icons", // optional, you are not bound to it
     ],
@@ -61,9 +60,12 @@ module.exports = configure(function (ctx) {
 
       // https://quasar.dev/quasar-cli/handling-webpack
       // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
-      chainWebpack(/* chain */) {
-        //
+      chainWebpack(chain) {
+        chain.resolve.alias.set("@", path.resolve(__dirname, "src"))
       },
+
+      // Options below are automatically set depending on the env, set them if you want to override
+      // extractCSS: false,
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
@@ -201,7 +203,6 @@ module.exports = configure(function (ctx) {
 
       builder: {
         // https://www.electron.build/configuration/configuration
-
         appId: "v_07",
       },
 
