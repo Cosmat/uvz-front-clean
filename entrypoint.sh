@@ -6,5 +6,8 @@ window.__RUNTIME_CONFIG__ = {
 };
 EOF
 
+echo "Generated config.js:"
+cat /usr/share/nginx/html/config.js
+
 # Start nginx
-nginx -g "daemon off;"
+exec nginx -g "daemon off;"

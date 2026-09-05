@@ -1,19 +1,25 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
+let apiInstance = null
+
 const getBaseUrl = () => {
   if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VUE_APP_API_URL) {
     return window.__RUNTIME_CONFIG__.VUE_APP_API_URL
   }
-  // fallback to build-time env
   return process.env.VUE_APP_API_URL || 'http://localhost:8000'
 }
 
-const api = axios.create({ baseURL: getBaseUrl() })
+const getApi = () => {
+  if (!apiInstance) {
+    apiInstance = axios.create({ baseURL: getBaseUrl() })
+  }
+  return apiInstance
+}
 
 export default boot(({ app }) => {
   app.config.globalProperties.$axios = axios
-  app.config.globalProperties.$api = api
+  app.config.globalProperties.$api = getApi()
 })
 
-export { axios, api }
+export { axios, getApi as api }
