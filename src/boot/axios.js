@@ -1,50 +1,26 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
-let apiInstance = null
-let configResolved = false
-let configResolve = null
+// Create axios instance WITHOUT baseURL - will be set dynamically
+const api = axios.create()
 
-const configPromise = new Promise(resolve => {
-  configResolve = resolve
+// Request interceptor to dynamically set baseURL from runtime config
+api.interceptors.request.use(config => {
+  const getBaseUrl = () => {
+    if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VUE_APP_API_URL) {
+      return window.__RUNTIME_CONFIG__.VUE_APP_API_URL
+    }
+    return process.env.VUE_APP_API_URL || 'http://localhost:8000'
+  }
+  
+  // Set baseURL dynamically for each request
+  config.baseURL = getBaseUrl()
+  return config
 })
-
-const getBaseUrl = () => {
-  if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VUE_APP_API_URL) {
-    return window.__RUNTIME_CONFIG__.VUE_APP_API_URL
-  }
-  return process.env.VUE_APP_API_URL || 'http://localhost:8000'
-}
-
-const getApi = async () => {
-  if (!apiInstance) {
-    // Wait for runtime config if in browser
-    if (typeof window !== 'undefined' && !configResolved) {
-      await configPromise
-    }
-    apiInstance = axios.create({ baseURL: getBaseUrl() })
-  }
-  return apiInstance
-}
-
-// Resolve config promise when config.js loads
-if (typeof window !== 'undefined') {
-  const checkConfig = () => {
-    if (window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VUE_APP_API_URL) {
-      configResolved = true
-      configResolve()
-    } else {
-      setTimeout(checkConfig, 50)
-    }
-  }
-  checkConfig()
-}
 
 export default boot(({ app }) => {
   app.config.globalProperties.$axios = axios
-  getApi().then(api => {
-    app.config.globalProperties.$api = api
-  })
+  app.config.globalProperties.$api = api
 })
 
-export { axios, getApi as api }
+export { axios, api }
