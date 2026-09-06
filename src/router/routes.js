@@ -48,17 +48,17 @@ const routes = [
     },
   },
   {
-    path: "/deshif",
+    path: "/deshife",
     component: () => import("layouts/MainLayout.vue"),
-    children: [{ path: "", component: () => import("components/TheDeshif") }],
+    children: [{ path: "", component: () => import("pages/Deshife.vue") }],
     meta: {
       auth: false,
     },
   },
   {
-    path: "/tabelnaya",
+    path: "/phones",
     component: () => import("layouts/MainLayout.vue"),
-    children: [{ path: "", component: () => import("components/tabelnaya") }],
+    children: [{ path: "", component: () => import("pages/Phones.vue") }],
     meta: {
       auth: false,
     },

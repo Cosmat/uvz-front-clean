@@ -5,9 +5,7 @@
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="drawer = !drawer" color="primary" unelevated rounded class="q-mr-md">
           <q-tooltip class="bg-purple" v-model="showing_01">ДЕШИФРАТОР</q-tooltip>
         </q-btn>
-        <a v-if="$q.screen.width > 600" href="https://vk.com/id35962245" target="_blank" class="q-ml-lg q-mt-xs">
-          <img :src="url" width="100" height="50" alt="Пример" />
-        </a>
+        
         <q-toolbar-title v-if="$q.screen.width > 600" class="text-primary">
           <marquee onmouseout="this.start()" onmouseover="this.stop()" style="font-family: 'Roboto', sans-serif;">
             Здравствуйте, уважаемый посетитель! Чтобы создать вакансию, пожалуйста зарегистрируйтесь.
@@ -24,25 +22,25 @@
                 <q-item-section>НА ГЛАВНУЮ</q-item-section>
               </q-item>
               <q-separator spaced />
-              <q-item clickable v-ripple to="/deshif">
+              <q-item clickable v-ripple to="/deshife">
                 <q-item-section avatar>
                   <q-icon class="text-red" name="font_download" />
                 </q-item-section>
                 <q-item-section>ДЕШИФРАТОР</q-item-section>
               </q-item>
               <q-separator spaced />
-              <q-item clickable v-ripple to="/tabelnaya">
+              <q-item clickable v-ripple to="/phones">
                 <q-item-section avatar>
                   <q-icon class="text-red" name="phone" />
                 </q-item-section>
-                <q-item-section>телефоны табельной</q-item-section>
+                <q-item-section>ТЕЛЕФОНЫ ТАБЕЛЬНЫХ</q-item-section>
               </q-item>
               <q-separator spaced />
               <q-item clickable v-ripple to="/ai-assistant">
                 <q-item-section avatar>
                   <q-icon class="text-red" name="smart_toy" />
                 </q-item-section>
-                <q-item-section>AI-помощник</q-item-section>
+                <q-item-section>AI-ПОМОЩНИК</q-item-section>
               </q-item>
               <q-separator spaced />
             </q-list>
@@ -50,14 +48,15 @@
         </q-drawer>
 
         <q-space />
-        <q-btn class="q-mr-lg" v-if="token" to="/profile" color="primary" unelevated rounded>{{ Name }}
-          <q-tooltip class="bg-purple" v-model="showing">Кликните сюда чтобы создать вакансию</q-tooltip>
+        <q-btn v-if="isAuthenticated" to="/profile" color="primary" unelevated rounded>
+          {{ userName }}
+          <q-tooltip class="bg-purple" v-model="showing">Создать вакансию</q-tooltip>
         </q-btn>
-        <q-btn v-if="!token" icon="login" dense color="primary" label="Вход" class="q-mr-lg" to="/login" unelevated rounded> </q-btn>
-        <q-btn v-if="token" icon="logout" dense color="primary" label="Выход" class="q-mr-lg" @click="logout" unelevated rounded />
-        <q-btn v-if="!token" icon="app_registration" dense color="primary" label="Регистрация" to="/registr" unelevated rounded>
-          <q-tooltip class="bg-purple" v-model="showing">Чтобы создать вакансию пожалуйста
-            зарегистрируйтесь</q-tooltip></q-btn>
+        <q-btn v-if="!isAuthenticated" icon="login" dense color="primary" label="Вход" class="q-mr-lg" to="/login" unelevated rounded> </q-btn>
+        <q-btn v-if="isAuthenticated" icon="logout" dense color="primary" label="Выход" class="q-mr-lg" @click="logout" unelevated rounded />
+        <q-btn v-if="!isAuthenticated" icon="app_registration" dense color="primary" label="Регистрация" to="/registr" unelevated rounded>
+          <q-tooltip class="bg-purple" v-model="showing">Чтобы создать вакансию пожалуйста зарегистрируйтесь</q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 
@@ -69,24 +68,23 @@
 
 <script>
 import { defineComponent, computed, ref, onMounted } from "vue";
-import { useStore } from "vuex";
+import { useAuthStore } from "stores/auth";
+import { useRouter } from "vue-router";
+
 export default defineComponent({
   name: "MainLayout",
-
-  components: {},
 
   setup() {
     const url = ref("logo_005.jpg.png");
     const showing = ref(false);
     const showing_01 = ref(false);
-    const $store = useStore();
-    const token = computed({
-      get: () => $store.getters["auth/token"],
-    });
+    const drawer = ref(false);
+    
+    const authStore = useAuthStore();
+    const router = useRouter();
 
-    const Name = computed({
-      get: () => $store.getters["auth/Name"],
-    });
+    const isAuthenticated = computed(() => authStore.isAuthenticated);
+    const userName = computed(() => authStore.user?.username || '');
 
     onMounted(() => {
       setTimeout(() => (showing.value = true), 1500);
@@ -95,21 +93,24 @@ export default defineComponent({
       setTimeout(() => (showing_01.value = false), 15000);
     });
 
+    const logout = () => {
+      authStore.logout();
+      router.push('/');
+    };
+
     return {
       url,
-
-      drawer: ref(false),
+      drawer,
       showing,
       showing_01,
-      token,
-      Name,
-      logout: () => {
-        $store.commit("auth/logout");
-      },
+      isAuthenticated,
+      userName,
+      logout
     };
   },
 });
 </script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 

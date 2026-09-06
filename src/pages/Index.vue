@@ -1,125 +1,307 @@
 <template>
   <q-page class="flex flex-center">
-    <div v-if="loading" class="full_width" style="height: 100vh">
-      <q-spinner-pie color="orange" size="7.5em" />
-    </div>
-    <div v-else>
-      <div class="row q-col-gutter-md q-mb-md">
-        <poisk_tzeh v-model="filter"></poisk_tzeh>
-      </div>
-      <div class="row q-col-gutter-md">
-        <q-card v-for="item in zayavki" :key="item._id || item.id" class="my-card q-mb-md col-12 col-md-6 col-lg-4">
-          <q-card-section>
-            <zayavka 
-              :tzeh="item.tzeh" 
-              :professia="item.professia" 
-              :description="item.description" 
-              :date="item.date"
-              :id="item._id || item.id"
-              :requirements="item.requirements"
-              :salary_min="item.salary_min"
-              :salary_max="item.salary_max"
-              :schedule="item.schedule"
-              :experience_required="item.experience_required"
-              :contact_name="item.contact_name"
-              :contact_phone="item.contact_phone"
-              :contact_email="item.contact_email"
-              :status="item.status"
-            >
-            </zayavka>
-          </q-card-section>
-        </q-card>
+    <!-- Loading skeleton -->
+    <div v-if="loading && zayavki.length === 0" class="full_width" style="height: 100vh">
+      <div class="row q-col-gutter-md q-px-md">
+        <div v-for="i in 6" :key="i" class="col-12 col-md-6 col-lg-4">
+          <q-card class="my-card q-mb-md animate-pulse">
+            <q-card-section>
+              <q-skeleton-tag type="rect" width="60%" height="24px" />
+              <q-skeleton-tag type="rect" width="100%" height="16px" />
+              <q-skeleton-tag type="rect" width="80%" height="16px" />
+              <q-skeleton-tag type="rect" width="100%" height="16px" />
+            </q-card-section>
+          </q-card>
+        </div>
       </div>
     </div>
+
+    <div v-else class="q-pa-md full-width" style="max-width: 1400px; margin: 0 auto;">
+      <!-- Header with stats and search -->
+      <div class="row q-mb-md items-center">
+        <div class="col-auto">
+          <h4 class="text-h6 q-mb-none">Вакансии УВЗ</h4>
+          <div class="text-caption text-grey-7">
+            Найдено: {{ pagination.total }} | Активных: {{ activeCount }}
+          </div>
+        </div>
+        <q-space />
+        <div class="col-auto">
+          <q-input
+            v-model="searchQuery"
+            @update:model-value="debouncedSearch"
+            placeholder="Поиск по профессии, цеху, описанию..."
+            dense
+            clearable
+            style="width: 300px"
+            prefix="<q-icon name='search' />"
+          />
+        </div>
+      </div>
+
+      <!-- Filters row -->
+      <div class="row q-col-gutter-sm q-mb-md" v-if="showFilters">
+        <div class="col-12 col-md-4">
+          <q-select
+            v-model="filters.tzeh"
+            :options="uniqueTzehs"
+            label="Цех"
+            dense
+            emit-value
+            map-options
+            option-value="value"
+            option-label="label"
+            clearable
+          />
+        </div>
+        <div class="col-12 col-md-4">
+          <q-select
+            v-model="filters.schedule"
+            :options="scheduleOptions"
+            label="График"
+            dense
+            emit-value
+            map-options
+            option-value="value"
+            option-label="label"
+            clearable
+          />
+        </div>
+        <div class="col-12 col-md-4">
+          <q-select
+            v-model="filters.experience_required"
+            :options="experienceOptions"
+            label="Опыт"
+            dense
+            emit-value
+            map-options
+            option-value="value"
+            option-label="label"
+            clearable
+          />
+        </div>
+      </div>
+
+      <div class="row q-mb-md">
+        <div class="col-auto">
+          <q-btn
+            :label="showFilters ? 'Скрыть фильтры' : 'Показать фильтры'"
+            @click="showFilters = !showFilters"
+            outline
+            size="sm"
+          />
+        </div>
+        <q-space />
+        <div class="col-auto">
+          <q-select
+            v-model="pagination.limit"
+            :options="[10, 20, 50, 100]"
+            label="На странице"
+            dense
+            style="width: 140px"
+            @update:model-value="onLimitChange"
+          />
+        </div>
+      </div>
+
+      <!-- Virtual scroll list -->
+      <div class="row q-col-gutter-md" style="min-height: 400px;">
+        <q-virtual-scroll
+          :items="zayavki"
+          :item-size="280"
+          :virtual-scroll-item-key="getItemKey"
+          :virtual-scroll-sticky-size-start="0"
+          :virtual-scroll-sticky-size-end="0"
+          class="col-12 col-md-6 col-lg-4"
+          style="height: calc(100vh - 300px); max-height: 700px;"
+        >
+          <template v-slot="{ item, index }">
+            <q-card class="my-card q-mb-md" :key="getItemKey(item)">
+              <q-card-section>
+                <ZayavkaCard
+                  :tzeh="item.tzeh"
+                  :professia="item.professia"
+                  :description="item.description"
+                  :date="item.date"
+                  :id="item._id || item.id"
+                  :requirements="item.requirements"
+                  :salary_min="item.salary_min"
+                  :salary_max="item.salary_max"
+                  :schedule="item.schedule"
+                  :experience_required="item.experience_required"
+                  :contact_name="item.contact_name"
+                  :contact_phone="item.contact_phone"
+                  :contact_email="item.contact_email"
+                  :status="item.status"
+                />
+              </q-card-section>
+            </q-card>
+          </template>
+        </q-virtual-scroll>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="pagination.pages > 1" class="row q-mt-md justify-center">
+        <q-pagination
+          v-model="pagination.page"
+          :max="pagination.pages"
+          :boundary-links="true"
+          :boundary-numbers="true"
+          @input="onPageChange"
+        />
+      </div>
+
+      <!-- Empty state -->
+      <div v-if="!loading && zayavki.length === 0" class="text-center q-pa-xl">
+        <q-icon name="work_off" size="64px" class="text-grey-4" />
+        <div class="text-h6 q-mt-md">Вакансии не найдены</div>
+        <div class="text-grey-7 q-mt-sm">
+          Попробуйте изменить фильтры или поиск
+        </div>
+      </div>
+    </div>
+
+    <!-- Error toast -->
+    <q-toast v-if="error" :message="error" color="negative" position="top" />
   </q-page>
 </template>
 
 <script>
-import keys from '@/keys/keys.dev';
-// import axios from "src/boot/axios";
-import { api } from 'boot/axios'
-import zayavka from "src/components/ui/Zayavka.vue";
-import poisk_tzeh from "src/components/ui/poisk_tzeh";
-import { onBeforeMount, onMounted, ref, computed } from "vue";
-import { useStore } from "vuex";
+import { ref, computed, watch, onBeforeMount, onMounted } from 'vue'
+import { useStore } from 'pinia'
+import { useQuasar } from 'quasar'
+import { useZayavkaStore } from 'stores/zayavka'
+import ZayavkaCard from 'components/ui/Zayavka.vue'
+import { debounce } from 'quasar'
+
 export default {
-  name: "PageIndex",
-  components: { zayavka, poisk_tzeh },
+  name: 'PageIndex',
+  components: { ZayavkaCard },
   setup() {
-    var loading = ref(false);
-    const store = useStore();
-    const filter = ref({});
+    const $q = useQuasar()
+    const zayavkaStore = useZayavkaStore()
+    
+    // Local state
+    const searchQuery = ref('')
+    const showFilters = ref(false)
+    const debounceTimer = ref(null)
 
+    // Expose store state
+    const { 
+      zayavki, 
+      loading, 
+      error, 
+      pagination, 
+      filters, 
+      uniqueTzehs, 
+      uniqueProfessias,
+      activeZayavki
+    } = zayavkaStore
 
+    // Computed
+    const activeCount = computed(() => activeZayavki.value.length)
+    
+    const scheduleOptions = [
+      { label: 'Полный день', value: 'Полный день' },
+      { label: 'Сменный график', value: 'Сменный график' },
+      { label: 'Гибкий график', value: 'Гибкий график' },
+      { label: 'Удаленная работа', value: 'Удаленная работа' },
+      { label: 'Не указано', value: 'Не указано' }
+    ]
 
+    const experienceOptions = [
+      { label: 'Без опыта', value: 'Без опыта' },
+      { label: '1-3 года', value: '1-3 года' },
+      { label: '3-5 лет', value: '3-5 лет' },
+      { label: '5+ лет', value: '5+ лет' },
+      { label: 'Не указано', value: 'Не указано' }
+    ]
+
+    const getItemKey = (item) => item._id || item.id || `temp-${Math.random()}`
+
+    // Debounced search
+    const debouncedSearch = debounce(async (value) => {
+      await zayavkaStore.setFilters({ 
+        search: value || undefined,
+        page: 1
+      })
+    }, 300)
+
+    // Pagination handlers
+    async function onPageChange(page) {
+      await zayavkaStore.fetchZayavki({ ...filters, page })
+    }
+
+    async function onLimitChange(limit) {
+      await zayavkaStore.fetchZayavki({ ...filters, limit, page: 1 })
+    }
+
+    // Initial load
     onBeforeMount(async () => {
-      loading.value = true;
-      await store.dispatch("requests/getallZayavka");
-      loading.value = false;
+      await zayavkaStore.fetchZayavki()
+      await zayavkaStore.fetchStats()
+    })
 
-    });
-
-    onMounted(() => {
-
-    });
-
-    // localStorage.setItem("zayavki", JSON.stringify(store.getters["requests/getAllzayavki"]));
-    // var s1 = localStorage.getItem('zayavki')
-
-    // const zayavki = computed(() =>
-    //   api.get(`${keys.BASE_URL}/getallZayavka`)
-    //     .then((response) => {
-    //       console.log(response.data)
-    //       response.data
-    //         .filter((zayavk) => {
-    //           if (filter.value.tzeh) {
-    //             return zayavk.tzeh.includes(filter.value.tzeh);
-    //           }
-    //           return zayavk;
-    //         })
-    //         .filter((zayavk) => {
-    //           if (filter.value.professia) {
-    //             return zayavk.professia.includes(filter.value.professia);
-    //           }
-    //           return zayavk;
-    //         })
-    //     })
-    //   // store.getters["requests/getAllzayavki"]
-
-    // );
-
-
-    const zayavki = computed(() => {
-      if (!store.getters["requests/getAllzayavki"]) return [];
-      return store.getters["requests/getAllzayavki"];
-    });
+    // Watch for errors
+    watch(() => zayavkaStore.error, (err) => {
+      if (err) {
+        $q.notify({ message: err, color: 'negative', position: 'top' })
+        zayavkaStore.clearError()
+      }
+    })
 
     return {
-      loading,
+      // State
+      searchQuery,
+      showFilters,
+      // Store state
       zayavki,
-      filter,
-    };
-  },
-};
+      loading,
+      error,
+      pagination,
+      filters,
+      uniqueTzehs,
+      uniqueProfessias,
+      activeCount,
+      scheduleOptions,
+      experienceOptions,
+      getItemKey,
+      // Methods
+      onPageChange,
+      onLimitChange
+    }
+  }
+}
 </script>
+
 <style scoped>
 .full_width {
   display: flex;
   justify-content: center;
   align-items: center;
 }
+.full-width {
+  width: 100%;
+}
 .my-card {
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(25, 118, 210, 0.08);
   background: #fff;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 .my-card:hover {
-  box-shadow: 0 4px 24px rgba(25, 118, 210, 0.18);
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.15);
+  transform: translateY(-2px);
 }
-@media (max-width: 600px) {
-  .my-card {
-    margin-bottom: 12px;
-  }
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+/* Virtual scroll container */
+.q-virtual-scroll__content {
+  min-height: 100%;
 }
 </style>
