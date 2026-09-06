@@ -1,17 +1,5 @@
 import axios from 'axios'
 import { apiProxy as api } from 'boot/axios'
-import type { 
-  Zayavka, 
-  ZayavkaListResponse, 
-  ZayavkaFilters,
-  Deshife,
-  DeshifeListResponse,
-  PhoneTabel,
-  PhoneTabelListResponse,
-  AuthResponse,
-  User,
-  StatsResponse
-} from 'src/types'
 
 // Simple in-memory cache for GET requests
 const cache = new Map()

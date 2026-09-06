@@ -12,8 +12,8 @@
           <q-input
             filled
             v-model="name"
-            label="Ваше имя"
-            hint="Пожалуйста укажите Ваш никнейм"
+            label="Ваш email"
+            hint="Пожалуйста укажите Ваш email"
             type="email"
             lazy-rules
             :rules="[
@@ -40,6 +40,7 @@
               label="Зарегистрироваться"
               @click="onSubmit"
               color="primary"
+              :loading="loading"
             />
 
             <q-btn label="На главную" class="q-ml-sm" color="primary" to="/" />
@@ -52,16 +53,18 @@
 
 <script>
 import { ref } from "vue";
-import { useStore } from "vuex";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "stores/auth";
+import { useQuasar } from "quasar";
 
 export default {
   setup() {
-    const $store = useStore();
+    const $q = useQuasar();
     const router = useRouter();
+    const authStore = useAuthStore();
     const name = ref(null);
     const pass = ref(null);
-    var loading = ref(null);
+    const loading = ref(false);
 
     return {
       name,
@@ -69,24 +72,28 @@ export default {
       loading,
 
       async onSubmit() {
-        if (pass.value && name.value) {
-          loading.value = true;
-          try {
-            const formData = {
-              name: name.value,
-              password: pass.value,
-            };
-            await $store.dispatch("auth/createUser", formData);
-            router.push("/");
-          } catch (e) {
-            console.log("error: ", e);
-            loading.value = false;
-          }
-        } else {
-          $store.dispatch("setMessage", {
-            value: "Пожалуйста введите имя и пароль",
-            type: "warning",
+        if (!name.value || !pass.value) {
+          $q.notify({
+            type: 'warning',
+            message: 'Пожалуйста введите email и пароль',
+            position: 'top'
           });
+          return;
+        }
+
+        loading.value = true;
+        try {
+          await authStore.register(name.value, pass.value, 'user');
+          router.push("/");
+        } catch (e) {
+          console.log("error: ", e);
+          $q.notify({
+            type: 'negative',
+            message: e.response?.data?.message || 'Ошибка регистрации',
+            position: 'top'
+          });
+        } finally {
+          loading.value = false;
         }
       },
     };

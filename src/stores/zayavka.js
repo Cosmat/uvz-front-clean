@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import apiService from 'src/services/api'
-import type { Zayavka, ZayavkaFilters, ZayavkaListResponse } from 'src/types'
 
 export const useZayavkaStore = defineStore('zayavka', () => {
   // State
@@ -16,7 +15,7 @@ export const useZayavkaStore = defineStore('zayavka', () => {
     hasNext: false,
     hasPrev: false
   })
-  const filters = ref<ZayavkaFilters>({})
+  const filters = ref({})
   const stats = ref(null)
 
   // Getters

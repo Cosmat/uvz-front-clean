@@ -33,7 +33,7 @@
             ]"
           />
           <div>
-            <q-btn label="Войти" @click="onSubmit" color="primary" />
+            <q-btn label="Войти" @click="onSubmit" color="primary" :loading="loading" />
             <q-btn label="На главную" class="q-ml-sm" color="primary" to="/" />
           </div>
         </q-form>
@@ -44,41 +44,47 @@
 
 <script>
 import { ref } from "vue";
-import { useStore } from "vuex";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "stores/auth";
+import { useQuasar } from "quasar";
 
 export default {
   setup() {
-    const $store = useStore();
+    const $q = useQuasar();
     const router = useRouter();
+    const authStore = useAuthStore();
     const name = ref(null);
     const pass = ref(null);
-    var loading = ref(null);
+    const loading = ref(false);
+
     return {
       name,
       pass,
       loading,
 
       async onSubmit() {
-        if (pass.value) {
-          loading.value = true;
-          try {
-            const formData = {
-              name: name.value,
-              password: pass.value,
-            };
-            await $store.dispatch("auth/login", formData);
-
-            router.push("/");
-          } catch (e) {
-            console.log(e);
-            loading.value = false;
-          }
-        } else {
-          $store.dispatch("setMessage", {
-            value: "Пожалуйста введите имя и пароль",
-            type: "warning",
+        if (!name.value || !pass.value) {
+          $q.notify({
+            type: 'warning',
+            message: 'Пожалуйста введите имя и пароль',
+            position: 'top'
           });
+          return;
+        }
+
+        loading.value = true;
+        try {
+          await authStore.login(name.value, pass.value);
+          router.push("/");
+        } catch (e) {
+          console.log(e);
+          $q.notify({
+            type: 'negative',
+            message: e.response?.data?.message || 'Неверный логин или пароль',
+            position: 'top'
+          });
+        } finally {
+          loading.value = false;
         }
       },
     };

@@ -153,6 +153,7 @@
               size="lg"
               class="full-width"
               icon="add_circle"
+              :loading="loading"
             />
             
             <q-btn
@@ -174,8 +175,8 @@
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { ref, computed } from "vue";
-import { api } from 'boot/axios'
-import { useStore } from "vuex";
+import { useZayavkaStore } from "stores/zayavka";
+import { useAuthStore } from "stores/auth";
 import dayjs from "dayjs";
 
 export default {
@@ -183,7 +184,8 @@ export default {
   setup() {
     const $q = useQuasar();
     const $router = useRouter();
-    const $store = useStore();
+    const zayavkaStore = useZayavkaStore();
+    const authStore = useAuthStore();
     
     // Основные поля
     const tzeh = ref(null);
@@ -200,9 +202,7 @@ export default {
     const contact_phone = ref("");
     const contact_email = ref("");
     
-    const id = computed({
-      get: () => $store.getters["auth/id"],
-    });
+    const loading = ref(false);
 
     // Опции для селектов
     const scheduleOptions = [
@@ -234,13 +234,11 @@ export default {
       contact_email,
       scheduleOptions,
       experienceOptions,
-      id,
+      loading,
 
       async onSubmit() {
-        // Деструктурируем notify для избежания конфликтов при минификации
         const { notify } = $q;
         const router = $router;
-        const store = $store;
         
         // Валидация зарплаты
         if (salary_min.value && salary_max.value && salary_min.value > salary_max.value) {
@@ -252,17 +250,15 @@ export default {
           return;
         }
 
-        var d = dayjs().format("DD.MM.YYYY");
+        const d = dayjs().format("DD.MM.YYYY");
+        loading.value = true;
         try {
           const formData = {
-            // Основные поля
             tzeh: tzeh.value,
             professia: professia.value.toLowerCase().trim(),
             description: description.value,
-            id: id.value,
+            id_sozdatelya: authStore.user?._id?.toString() || '',
             date: d,
-            
-            // Новые поля
             requirements: requirements.value,
             salary_min: salary_min.value || null,
             salary_max: salary_max.value || null,
@@ -274,7 +270,7 @@ export default {
             status: "Активная"
           };
           
-          await api.post('/createZayavka', formData);
+          await zayavkaStore.createZayavka(formData);
           
           // Очистка формы
           tzeh.value = null;
@@ -289,8 +285,6 @@ export default {
           contact_phone.value = "";
           contact_email.value = "";
           
-          await store.dispatch("requests/getallZayavka");
-          
           notify({
             type: 'positive',
             message: 'Вакансия успешно создана!',
@@ -302,9 +296,11 @@ export default {
           console.log("error: ", err);
           notify({
             type: 'negative',
-            message: 'Ошибка при создании вакансии',
+            message: err.response?.data?.message || 'Ошибка при создании вакансии',
             position: 'top'
           });
+        } finally {
+          loading.value = false;
         }
       },
     };

@@ -16,17 +16,24 @@
       <div class="row q-col-gutter-md q-mt-lg q-mb-md flex flex-center">
         <q-card class="search-card col-12 col-md-8 col-lg-6">
           <q-card-section>
-            <poisk_shifr
-              v-model="filter"
+            <q-input
+              v-model="filter.shifr"
+              dense
+              clearable
               placeholder="Поиск по шифру или описанию..."
-            />
+              label="Шифр / Описание"
+            >
+              <template v-slot:prepend>
+                <q-icon name="search" />
+              </template>
+            </q-input>
           </q-card-section>
         </q-card>
       </div>
       <div class="row q-col-gutter-md flex flex-center">
         <q-card
-          v-for="item in ddata"
-          :key="item"
+          v-for="item in filteredDeshife"
+          :key="item.shifr"
           class="deshif-card col-12 col-md-8 col-lg-6 q-mb-md"
         >
           <q-card-section class="row items-center">
@@ -46,66 +53,81 @@
 </template>
 
 <script>
-import poisk_shifr from "src/components/ui/poisk_shifr";
 import { onBeforeMount, ref, computed } from "vue";
-import { api } from 'boot/axios'
-import { useStore } from "vuex";
+import { useDeshifeStore } from "stores/deshife";
+import { useQuasar } from "quasar";
+
 export default {
   name: "Deshife",
-  components: { poisk_shifr },
+
   setup() {
-    const store = useStore();
-    var loading = ref(false);
-    const shifr = ref(null);
-    const description = ref(null);
+    const $q = useQuasar();
+    const deshifeStore = useDeshifeStore();
+
+    const loading = ref(false);
     const filter = ref({});
 
     onBeforeMount(async () => {
       loading.value = true;
-      await store.dispatch("requests/getallDeshife");
-      loading.value = false;
+      try {
+        await deshifeStore.fetchDeshife({ limit: 1000 });
+        await deshifeStore.fetchCategories();
+      } catch (e) {
+        console.error('Failed to fetch deshife:', e);
+      } finally {
+        loading.value = false;
+      }
     });
-    const ddata = computed(() =>
-      store.getters["requests/getallDeshife"]
-        .filter((dddata) => {
-          if (filter.value.shifr) {
-            return dddata.shifr.includes(filter.value.shifr);
-          }
-          return dddata;
-        })
-        .filter((dddata) => {
-          if (filter.value.description) {
-            return dddata.description.includes(filter.value.description);
-          }
-          return dddata;
-        })
-    );
+
+    const filteredDeshife = computed(() => {
+      let data = deshifeStore.deshife;
+      if (filter.value.shifr) {
+        const q = filter.value.shifr.toLowerCase();
+        data = data.filter(d => 
+          d.shifr.toLowerCase().includes(q) ||
+          d.description.toLowerCase().includes(q)
+        );
+      }
+      if (filter.value.category) {
+        data = data.filter(d => d.category === filter.value.category);
+      }
+      return data;
+    });
+
+    const createDeshife = async (shifr, description, category) => {
+      if (!shifr || !description) {
+        $q.notify({
+          type: 'warning',
+          message: 'Заполните шифр и описание',
+          position: 'top'
+        });
+        return;
+      }
+      loading.value = true;
+      try {
+        await deshifeStore.createDeshife({ shifr, description, category: category || 'Начисления' });
+        $q.notify({
+          type: 'positive',
+          message: 'Дешифр создан',
+          position: 'top'
+        });
+      } catch (e) {
+        console.error('Create deshife error:', e);
+        $q.notify({
+          type: 'negative',
+          message: 'Ошибка при создании',
+          position: 'top'
+        });
+      } finally {
+        loading.value = false;
+      }
+    };
+
     return {
       loading,
-      shifr,
-      description,
-      ddata,
       filter,
-      async onSubmit() {
-        if (shifr.value && description.value) {
-          loading.value = true;
-          try {
-            const formData = {
-              shifr: shifr.value,
-              description: description.value,
-            };
-            await api.post('/create_Deshife', formData);
-          } catch (e) {
-            console.log("error: ", e);
-            loading.value = false;
-          }
-        } else {
-          $store.dispatch("setMessage", {
-            value: "Во время создания дешифр что то пошлот не так",
-            type: "warning",
-          });
-        }
-      },
+      filteredDeshife,
+      createDeshife
     };
   },
 };

@@ -1,7 +1,7 @@
 <template>
   <div>
     <q-toolbar class="bg-primary text-white">
-      <q-toolbar-title> {{ Name }}</q-toolbar-title>
+      <q-toolbar-title> {{ userName }}</q-toolbar-title>
       <q-space />
       <q-btn
         size="sm"
@@ -17,45 +17,43 @@
     <create-zayavka
       v-if="createBtn"
       @chancel="createBtn = false"
-      @createZayavka="zayavkaCreated"
     ></create-zayavka>
     <div v-if="loading" class="full_width q-mt-lg" style="height: 100vh">
       <q-spinner-pie color="orange" size="7.5em" />
     </div>
 
-    <div
-      v-if="epmty_or_not === true"
-      class="text-h5 full_width_w text-white q-mt-xl q-ml-xl"
-    >
+    <div v-if="epmty_or_not === true" class="text-h5 full_width_w text-white q-mt-xl q-ml-xl">
       У Вас пока нет созданных вакансий. Чтобы создать вакансию нажмите создать
       заявку.
     </div>
     <q-list
       v-else
-      v-for="item in zayavka_profile"
-      :key="item"
+      v-for="item in myZayavki"
+      :key="item._id || item.id"
       dark
       separator
       class="full_width"
     >
       <zayavkaProfile
-        @del="del_prof"
+        @del="delProf"
         :tzeh="item.tzeh"
         :professia="item.professia"
         :description="item.description"
         :date="item.date"
-        :id="item._id"
+        :id="item._id || item.id"
       >
-        {{ item }}</zayavkaProfile
-      >
+        {{ item }}
+      </zayavkaProfile>
     </q-list>
   </div>
 </template>
 
 <script>
 import { computed, onBeforeMount, ref } from "vue";
-import { useStore } from "vuex";
-import { api } from 'boot/axios'
+import { useRouter } from "vue-router";
+import { useZayavkaStore } from "stores/zayavka";
+import { useAuthStore } from "stores/auth";
+import { useQuasar } from "quasar";
 import zayavkaProfile from "../components/TheZayavkaProfile";
 import CreateZayavka from "../components/createZayavka.vue";
 
@@ -63,65 +61,77 @@ export default {
   components: { zayavkaProfile, CreateZayavka },
 
   setup() {
+    const $q = useQuasar();
+    const router = useRouter();
+    const zayavkaStore = useZayavkaStore();
+    const authStore = useAuthStore();
+
     onBeforeMount(async () => {
       loading.value = true;
-      const data = await api.post('/get_Zayavka_profile', {
-        id_sozdatelya,
-      });
-      zayavka_profile.value = data.data.reverse();
-      loading.value = false;
+      try {
+        const response = await zayavkaStore.fetchMyZayavki();
+        myZayavki.value = response.data.reverse();
+      } catch (e) {
+        console.error('Failed to fetch profile zayavki:', e);
+      } finally {
+        loading.value = false;
+      }
 
-      if (zayavka_profile._rawValue.length === 0) {
+      if (myZayavki.value.length === 0) {
         epmty_or_not.value = true;
       } else {
         epmty_or_not.value = false;
       }
     });
 
-    var loading = ref(false);
-    const zayavka_profile = ref(false);
-    const $store = useStore();
-    const Name = computed({
-      get: () => $store.getters["auth/Name"],
-    });
-    var id_sozdatelya = computed({
-      get: () => $store.getters["auth/id"],
-    });
+    const userName = computed(() => authStore.user?.username || '');
 
-    id_sozdatelya = id_sozdatelya.value;
-    var createBtn = ref(null);
+    var loading = ref(false);
+    var myZayavki = ref([]);
+    var createBtn = ref(false);
     var epmty_or_not = ref(false);
+
+    const zayavkaCreated = () => {
+      createBtn.value = false;
+      $q.notify({
+        type: 'positive',
+        message: 'Вакансия создана',
+        position: 'top'
+      });
+    };
+
+    const delProf = async (id) => {
+      try {
+        loading.value = true;
+        await zayavkaStore.deleteZayavka(id);
+        // Refetch to update list
+        const response = await zayavkaStore.fetchMyZayavki();
+        myZayavki.value = response.data.reverse();
+        $q.notify({
+          type: 'positive',
+          message: 'Вакансия удалена',
+          position: 'top'
+        });
+      } catch (e) {
+        console.error('Delete error:', e);
+        $q.notify({
+          type: 'negative',
+          message: 'Ошибка при удалении',
+          position: 'top'
+        });
+      } finally {
+        loading.value = false;
+      }
+    };
+
     return {
-      Name,
+      Name: userName,
       createBtn,
-      zayavka_profile,
+      myZayavki,
       loading,
       epmty_or_not,
-
-      zayavkaCreated: () => {
-        createBtn.value = false;
-        $store.dispatch("setMessage", {
-          value: "Вакансия создана",
-          type: "warning",
-        });
-      },
-
-      del_prof: async (dt) => {
-        await api.post('/del_Zayavka', {
-          dt,
-        });
-        const data = await api.post('/get_Zayavka_profile', {
-          id_sozdatelya,
-        });
-        zayavka_profile.value = data.data.reverse();
-      },
-
-      get_Zayavka_profile: async () => {
-        const data = await api.post('/get_Zayavka_profile', {
-          id_sozdatelya,
-        });
-        zayavka_profile.value = data.data.reverse();
-      },
+      zayavkaCreated,
+      delProf
     };
   },
 };
