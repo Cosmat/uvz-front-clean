@@ -1,26 +1,25 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
-// Create axios instance WITHOUT baseURL - will be set dynamically
-const api = axios.create()
+let apiInstance = null
 
-// Request interceptor to dynamically set baseURL from runtime config
-api.interceptors.request.use(config => {
-  const getBaseUrl = () => {
-    if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VUE_APP_API_URL) {
-      return window.__RUNTIME_CONFIG__.VUE_APP_API_URL
-    }
-    return process.env.VUE_APP_API_URL || 'http://localhost:8000'
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__ && window.__RUNTIME_CONFIG__.VUE_APP_API_URL) {
+    return window.__RUNTIME_CONFIG__.VUE_APP_API_URL
   }
-  
-  // Set baseURL dynamically for each request
-  config.baseURL = getBaseUrl()
-  return config
-})
+  return process.env.VUE_APP_API_URL || 'http://localhost:8000'
+}
+
+const getApi = () => {
+  if (!apiInstance) {
+    apiInstance = axios.create({ baseURL: getBaseUrl() })
+  }
+  return apiInstance
+}
 
 export default boot(({ app }) => {
   app.config.globalProperties.$axios = axios
-  app.config.globalProperties.$api = api
+  app.config.globalProperties.$api = getApi()
 })
 
-export { axios, api }
+export { axios, getApi as api }
