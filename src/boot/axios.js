@@ -17,9 +17,17 @@ const getApi = () => {
   return apiInstance
 }
 
-export default boot(({ app }) => {
-  app.config.globalProperties.$axios = axios
-  app.config.globalProperties.$api = getApi()
+// Export a proxy object that delegates to the lazy instance
+const apiProxy = new Proxy({}, {
+  get(target, prop) {
+    const api = getApi()
+    return api[prop]
+  }
 })
 
-export { axios, getApi as api }
+export default boot(({ app }) => {
+  app.config.globalProperties.$axios = axios
+  app.config.globalProperties.$api = apiProxy
+})
+
+export { axios, apiProxy as api }
