@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { apiProxy as api } from 'boot/axios'
+import { api } from 'boot/axios'
 
 // Simple in-memory cache for GET requests
 const cache = new Map()
