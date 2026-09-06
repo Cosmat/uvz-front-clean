@@ -21,11 +21,10 @@
             hint="Например: 850, 563, 300"
             lazy-rules
             :rules="[
-              (val) =>
-                (val && val.length > 0) || 'Пожалуйста напишите что-либо',
+              (val) => (val && val.length > 0) || 'Пожалуйста напишите что-либо',
             ]"
           />
-
+          
           <q-input
             filled
             v-model="professia"
@@ -33,8 +32,7 @@
             hint="Например: токарь, инженер, мастер"
             lazy-rules
             :rules="[
-              (val) =>
-                (val && val.length > 0) || 'Пожалуйста напишите что-либо',
+              (val) => (val && val.length > 0) || 'Пожалуйста напишите что-либо',
             ]"
           />
           
@@ -47,8 +45,7 @@
             map-options
             lazy-rules
             :rules="[
-              (val) =>
-                (val && val.length > 0) || 'Пожалуйста выберите график',
+              (val) => (val && val.length > 0) || 'Пожалуйста выберите график',
             ]"
           />
           
@@ -61,11 +58,10 @@
             map-options
             lazy-rules
             :rules="[
-              (val) =>
-                (val && val.length > 0) || 'Пожалуйста выберите опыт',
+              (val) => (val && val.length > 0) || 'Пожалуйста выберите опыт',
             ]"
           />
-
+          
           <q-input
             type="textarea"
             filled
@@ -75,8 +71,7 @@
             rows="4"
             lazy-rules
             :rules="[
-              (val) =>
-                (val && val.length > 0) || 'Пожалуйста напишите что-либо',
+              (val) => (val && val.length > 0) || 'Пожалуйста напишите что-либо',
             ]"
           />
           
@@ -88,7 +83,7 @@
             hint="Образование, навыки, личные качества"
             rows="3"
           />
-
+          
           <!-- Зарплата -->
           <div class="text-subtitle1 text-white q-mb-sm q-mt-md" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
             <q-icon name="attach_money" size="sm" class="q-mr-xs" />
@@ -115,7 +110,7 @@
               />
             </div>
           </div>
-
+          
           <!-- Контактная информация -->
           <div class="text-subtitle1 text-white q-mb-sm q-mt-md" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
             <q-icon name="contact_phone" size="sm" class="q-mr-xs" />
@@ -149,7 +144,7 @@
               />
             </div>
           </div>
-
+          
           <div class="q-mt-lg">
             <q-btn
               label="Создать вакансию"
@@ -159,7 +154,7 @@
               class="full-width"
               icon="add_circle"
             />
-
+            
             <q-btn
               label="Отмена"
               class="q-mt-sm full-width"
@@ -179,10 +174,9 @@
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { ref, computed } from "vue";
-import axios from "axios";
+import { api } from 'boot/axios'
 import { useStore } from "vuex";
 import dayjs from "dayjs";
-import keys from '@/keys/keys.dev';
 
 export default {
   emits: ["createZayavka", "chancel", "del"],
@@ -280,7 +274,7 @@ export default {
             status: "Активная"
           };
           
-          await axios.post(`${keys.BASE_URL}/createZayavka`, formData);
+          await api.post('/createZayavka', formData);
           
           // Очистка формы
           tzeh.value = null;

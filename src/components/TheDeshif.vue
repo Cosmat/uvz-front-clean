@@ -48,9 +48,8 @@
 <script>
 import poisk_shifr from "src/components/ui/poisk_shifr";
 import { onBeforeMount, ref, computed } from "vue";
-import axios from "axios";
+import { api } from 'boot/axios'
 import { useStore } from "vuex";
-import keys from '@/keys/keys.dev';
 export default {
   name: "Deshife",
   components: { poisk_shifr },
@@ -95,7 +94,7 @@ export default {
               shifr: shifr.value,
               description: description.value,
             };
-            await axios.post(`${keys.BASE_URL}/create_Deshife`, formData);
+            await api.post('/create_Deshife', formData);
           } catch (e) {
             console.log("error: ", e);
             loading.value = false;

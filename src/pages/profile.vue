@@ -53,12 +53,11 @@
 </template>
 
 <script>
-import axios from "axios";
 import { computed, onBeforeMount, ref } from "vue";
 import { useStore } from "vuex";
+import { api } from 'boot/axios'
 import zayavkaProfile from "../components/TheZayavkaProfile";
 import CreateZayavka from "../components/createZayavka.vue";
-import keys from '@/keys/keys.dev';
 
 export default {
   components: { zayavkaProfile, CreateZayavka },
@@ -66,7 +65,7 @@ export default {
   setup() {
     onBeforeMount(async () => {
       loading.value = true;
-      const data = await axios.post(`${keys.BASE_URL}/get_Zayavka_profile`, {
+      const data = await api.post('/get_Zayavka_profile', {
         id_sozdatelya,
       });
       zayavka_profile.value = data.data.reverse();
@@ -108,17 +107,17 @@ export default {
       },
 
       del_prof: async (dt) => {
-        await axios.post(`${keys.BASE_URL}/del_Zayavka`, {
+        await api.post('/del_Zayavka', {
           dt,
         });
-        const data = await axios.post(`${keys.BASE_URL}/get_Zayavka_profile`, {
+        const data = await api.post('/get_Zayavka_profile', {
           id_sozdatelya,
         });
         zayavka_profile.value = data.data.reverse();
       },
 
       get_Zayavka_profile: async () => {
-        const data = await axios.post(`${keys.BASE_URL}/get_Zayavka_profile`, {
+        const data = await api.post('/get_Zayavka_profile', {
           id_sozdatelya,
         });
         zayavka_profile.value = data.data.reverse();
