@@ -41,8 +41,8 @@ export const useZayavkaStore = defineStore('zayavka', () => {
     
     try {
       const response = await apiService.getZayavki(filters.value)
-      zayavki.value = response.data
-      pagination.value = response.pagination
+      zayavki.value = response.data.data || []
+      pagination.value = response.data.pagination
     } catch (e) {
       error.value = e.message || 'Failed to fetch vacancies'
       console.error('fetchZayavki error:', e)

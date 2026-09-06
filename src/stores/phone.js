@@ -26,8 +26,8 @@ export const usePhoneStore = defineStore('phone', () => {
     error.value = null
     try {
       const response = await apiService.getPhones(params)
-      phones.value = response.data
-      pagination.value = response.pagination
+      phones.value = response.data.data || []
+      pagination.value = response.data.pagination
     } catch (e) {
       error.value = e.message || 'Failed to fetch phones'
     } finally {
