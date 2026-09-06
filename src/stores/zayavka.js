@@ -40,10 +40,10 @@ export const useZayavkaStore = defineStore('zayavka', () => {
     Object.assign(filters.value, newFilters)
     
     try {
-      const response = await apiService.getZayavki(filters.value)
-      zayavki.value = response.data.data || []
-      pagination.value = response.data.pagination
-    } catch (e) {
+          const response = await apiService.getZayavki(filters.value)
+          zayavki.value = response.data || []
+          pagination.value = response.pagination || { page: 1, limit: 20, total: 0, pages: 0, hasNext: false, hasPrev: false }
+        } catch (e) {
       error.value = e.message || 'Failed to fetch vacancies'
       console.error('fetchZayavki error:', e)
     } finally {

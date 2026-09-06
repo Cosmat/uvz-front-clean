@@ -37,8 +37,8 @@ export const useDeshifeStore = defineStore('deshife', () => {
     error.value = null
     try {
       const response = await apiService.getDeshife(params)
-      deshife.value = response.data.data || []
-      pagination.value = response.data.pagination
+      deshife.value = response.data || []
+      pagination.value = response.pagination || { page: 1, limit: 100, total: 0, pages: 0 }
     } catch (e) {
       error.value = e.message || 'Failed to fetch deshife'
     } finally {
