@@ -6,17 +6,12 @@ export const useDeshifeStore = defineStore('deshife', () => {
   const deshife = ref([])
   const loading = ref(false)
   const error = ref(null)
-  const pagination = ref({
-    page: 1,
-    limit: 100,
-    total: 0,
-    pages: 0
-  })
+  const pagination = ref({ page: 1, limit: 100, total: 0, pages: 0 })
   const categories = ref([])
 
   const byCategory = computed(() => {
     const grouped = {}
-    for (const d of deshife.value) {
+    for (const d of (deshife.value || [])) {
       if (!grouped[d.category]) grouped[d.category] = []
       grouped[d.category].push(d)
     }
@@ -24,11 +19,10 @@ export const useDeshifeStore = defineStore('deshife', () => {
   })
 
   const searchDeshife = computed(() => (query) => {
-    if (!query) return deshife.value
+    if (!query) return deshife.value || []
     const q = query.toLowerCase()
-    return deshife.value.filter(d => 
-      d.shifr.toLowerCase().includes(q) ||
-      d.description.toLowerCase().includes(q)
+    return (deshife.value || []).filter(d =>
+      d.shifr?.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q)
     )
   })
 
@@ -37,10 +31,13 @@ export const useDeshifeStore = defineStore('deshife', () => {
     error.value = null
     try {
       const response = await apiService.getDeshife(params)
-      deshife.value = response.data || []
-      pagination.value = response.pagination || { page: 1, limit: 100, total: 0, pages: 0 }
+      const data = response?.data || []
+      const pag = response?.pagination || { page: 1, limit: 100, total: 0, pages: 0 }
+      deshife.value = data
+      pagination.value = pag
     } catch (e) {
       error.value = e.message || 'Failed to fetch deshife'
+      deshife.value = []
     } finally {
       loading.value = false
     }
@@ -67,16 +64,8 @@ export const useDeshifeStore = defineStore('deshife', () => {
   }
 
   return {
-    deshife,
-    loading,
-    error,
-    pagination,
-    categories,
-    byCategory,
-    searchDeshife,
-    fetchDeshife,
-    fetchCategories,
-    createDeshife,
-    bulkCreateDeshife
+    deshife, loading, error, pagination, categories,
+    byCategory, searchDeshife,
+    fetchDeshife, fetchCategories, createDeshife, bulkCreateDeshife
   }
 })

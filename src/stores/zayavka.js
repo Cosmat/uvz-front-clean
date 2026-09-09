@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import apiService from 'src/services/api'
 
 export const useZayavkaStore = defineStore('zayavka', () => {
-  // State
   const zayavki = ref([])
   const loading = ref(false)
   const error = ref(null)
@@ -18,34 +17,32 @@ export const useZayavkaStore = defineStore('zayavka', () => {
   const filters = ref({})
   const stats = ref(null)
 
-  // Getters
-  const activeZayavki = computed(() => zayavki.value.filter(z => z.status === 'Активная'))
+  const activeZayavki = computed(() => (zayavki.value || []).filter(z => z.status === 'Активная'))
   const byTzeh = computed(() => {
     const grouped = {}
-    for (const z of zayavki.value) {
+    for (const z of (zayavki.value || [])) {
       if (!grouped[z.tzeh]) grouped[z.tzeh] = []
       grouped[z.tzeh].push(z)
     }
     return grouped
   })
-  const uniqueTzehs = computed(() => [...new Set(zayavki.value.map(z => z.tzeh))].sort())
-  const uniqueProfessias = computed(() => [...new Set(zayavki.value.map(z => z.professia))].sort())
+  const uniqueTzehs = computed(() => [...new Set((zayavki.value || []).map(z => z.tzeh))].sort())
+  const uniqueProfessias = computed(() => [...new Set((zayavki.value || []).map(z => z.professia))].sort())
 
-  // Actions
   async function fetchZayavki(newFilters = {}) {
     loading.value = true
     error.value = null
-    
-    // Merge new filters with existing
     Object.assign(filters.value, newFilters)
-    
     try {
-          const response = await apiService.getZayavki(filters.value)
-          zayavki.value = response.data || []
-          pagination.value = response.pagination || { page: 1, limit: 20, total: 0, pages: 0, hasNext: false, hasPrev: false }
-        } catch (e) {
+      const response = await apiService.getZayavki(filters.value)
+      const data = response?.data || []
+      const pag = response?.pagination || { page: 1, limit: 20, total: 0, pages: 0, hasNext: false, hasPrev: false }
+      zayavki.value = data
+      pagination.value = pag
+    } catch (e) {
       error.value = e.message || 'Failed to fetch vacancies'
       console.error('fetchZayavki error:', e)
+      zayavki.value = []
     } finally {
       loading.value = false
     }
@@ -140,29 +137,9 @@ export const useZayavkaStore = defineStore('zayavka', () => {
   }
 
   return {
-    // State
-    zayavki,
-    loading,
-    error,
-    pagination,
-    filters,
-    stats,
-    // Getters
-    activeZayavki,
-    byTzeh,
-    uniqueTzehs,
-    uniqueProfessias,
-    // Actions
-    fetchZayavki,
-    fetchNextPage,
-    fetchPrevPage,
-    setFilters,
-    clearFilters,
-    fetchStats,
-    createZayavka,
-    updateZayavka,
-    archiveZayavka,
-    deleteZayavka,
-    clearError
+    zayavki, loading, error, pagination, filters, stats,
+    activeZayavki, byTzeh, uniqueTzehs, uniqueProfessias,
+    fetchZayavki, fetchNextPage, fetchPrevPage, setFilters, clearFilters,
+    fetchStats, createZayavka, updateZayavka, archiveZayavka, deleteZayavka, clearError
   }
 })

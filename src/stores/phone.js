@@ -6,16 +6,11 @@ export const usePhoneStore = defineStore('phone', () => {
   const phones = ref([])
   const loading = ref(false)
   const error = ref(null)
-  const pagination = ref({
-    page: 1,
-    limit: 100,
-    total: 0,
-    pages: 0
-  })
+  const pagination = ref({ page: 1, limit: 100, total: 0, pages: 0 })
 
   const byTzeh = computed(() => {
     const map = {}
-    for (const p of phones.value) {
+    for (const p of (phones.value || [])) {
       map[p.number_tzeh] = p
     }
     return map
@@ -26,10 +21,13 @@ export const usePhoneStore = defineStore('phone', () => {
     error.value = null
     try {
       const response = await apiService.getPhones(params)
-      phones.value = response.data || []
-      pagination.value = response.pagination || { page: 1, limit: 100, total: 0, pages: 0 }
+      const data = response?.data || []
+      const pag = response?.pagination || { page: 1, limit: 100, total: 0, pages: 0 }
+      phones.value = data
+      pagination.value = pag
     } catch (e) {
       error.value = e.message || 'Failed to fetch phones'
+      phones.value = []
     } finally {
       loading.value = false
     }
@@ -57,14 +55,7 @@ export const usePhoneStore = defineStore('phone', () => {
   }
 
   return {
-    phones,
-    loading,
-    error,
-    pagination,
-    byTzeh,
-    fetchPhones,
-    getPhone,
-    createPhone,
-    bulkCreatePhones
+    phones, loading, error, pagination, byTzeh,
+    fetchPhones, getPhone, createPhone, bulkCreatePhones
   }
 })
