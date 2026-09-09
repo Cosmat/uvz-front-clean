@@ -4,7 +4,7 @@
       <div class="col-auto">
         <h4 class="text-h6 q-mb-none">Телефоны табельных цехов</h4>
         <div class="text-caption text-grey-7">
-          Всего: {{ pagination.total }}
+          Всего: {{ pagination?.total || 0 }}
         </div>
       </div>
       <q-space />
@@ -24,7 +24,7 @@
     <!-- Table -->
     <div class="q-overflow-auto">
       <q-table
-        :rows="phones"
+        :rows="phones || []"
         :columns="columns"
         row-key="number_tzeh"
         :loading="loading"
@@ -76,6 +76,7 @@
 
 <script>
 import { ref, watch, onBeforeMount } from 'vue'
+import { storeToRefs } from 'pinia'
 import { usePhoneStore } from 'stores/phone'
 import { useQuasar } from 'quasar'
 import { debounce } from 'quasar'
@@ -86,9 +87,15 @@ export default {
     const $q = useQuasar()
     const phoneStore = usePhoneStore()
 
-    const searchQuery = ref('')
+    // Use storeToRefs for proper reactivity
+    const {
+      phones,
+      loading,
+      error,
+      pagination
+    } = storeToRefs(phoneStore)
 
-    const { phones, loading, error, pagination } = phoneStore
+    const searchQuery = ref('')
 
     const columns = [
       { name: 'number_tzeh', label: 'Цех', field: 'number_tzeh', align: 'center', sortable: true },
@@ -103,7 +110,6 @@ export default {
 
     const formatPhoneForTel = (phone) => {
       if (!phone) return ''
-      // Remove non-digits
       return phone.replace(/\D/g, '')
     }
 
@@ -118,7 +124,7 @@ export default {
     }
 
     const debouncedSearch = debounce(async (value) => {
-      await phoneStore.fetchPhones({ 
+      await phoneStore.fetchPhones({
         search: value || undefined,
         page: 1
       })

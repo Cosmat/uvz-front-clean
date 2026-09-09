@@ -4,7 +4,7 @@
       <div class="col-auto">
         <h4 class="text-h6 q-mb-none">Дешифратор кодов зарплаты</h4>
         <div class="text-caption text-grey-7">
-          Всего кодов: {{ pagination.total }}
+          Всего кодов: {{ pagination?.total || 0 }}
         </div>
       </div>
       <q-space />
@@ -22,7 +22,7 @@
     </div>
 
     <!-- Category filter -->
-    <div v-if="categories.length > 0" class="row q-col-gutter-sm q-mb-md">
+    <div v-if="(categories?.length || 0) > 0" class="row q-col-gutter-sm q-mb-md">
       <div class="col-12 col-md-4">
         <q-select
           v-model="selectedCategory"
@@ -41,7 +41,7 @@
     <!-- Table -->
     <div class="q-overflow-auto">
       <q-table
-        :rows="deshife"
+        :rows="deshife || []"
         :columns="columns"
         row-key="shifr"
         :loading="loading"
@@ -76,6 +76,7 @@
 
 <script>
 import { ref, computed, watch, onBeforeMount } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useDeshifeStore } from 'stores/deshife'
 import { useQuasar } from 'quasar'
 import { debounce } from 'quasar'
@@ -86,14 +87,21 @@ export default {
     const $q = useQuasar()
     const deshifeStore = useDeshifeStore()
 
+    // Use storeToRefs for proper reactivity
+    const {
+      deshife,
+      loading,
+      error,
+      pagination,
+      categories
+    } = storeToRefs(deshifeStore)
+
     const searchQuery = ref('')
     const selectedCategory = ref(null)
 
-    const { deshife, loading, error, pagination, categories } = deshifeStore
-
     const categoryOptions = computed(() => [
       { label: 'Все', value: null },
-      ...categories.value.map(c => ({ label: c, value: c }))
+      ...(categories.value || []).map(c => ({ label: c, value: c }))
     ])
 
     const columns = [
@@ -111,7 +119,7 @@ export default {
     }
 
     const debouncedSearch = debounce(async (value) => {
-      await deshifeStore.fetchDeshife({ 
+      await deshifeStore.fetchDeshife({
         search: value || undefined,
         category: selectedCategory.value || undefined,
         page: 1
@@ -119,7 +127,7 @@ export default {
     }, 300)
 
     watch(selectedCategory, async (val) => {
-      await deshifeStore.fetchDeshife({ 
+      await deshifeStore.fetchDeshife({
         search: searchQuery.value || undefined,
         category: val || undefined,
         page: 1
