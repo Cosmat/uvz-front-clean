@@ -82,10 +82,6 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
   }
 
-  if (token.value) {
-    fetchMe()
-  }
-
   return {
     user,
     token,

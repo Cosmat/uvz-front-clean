@@ -2,7 +2,13 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { Quasar } from 'quasar'
 import quasarUserOptions from './quasar-user-options'
-import { Quasar } from 'quasar'
-import quasarUserOptions from './quasar-user-options'
+import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
-createApp(App).use(Quasar, quasarUserOptions).use(Quasar, quasarUserOptions).mount('#app')
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+
+createApp(App)
+  .use(Quasar, quasarUserOptions)
+  .use(pinia)
+  .mount('#app')
