@@ -51,6 +51,19 @@ async function retryRequest(requestFn, retries = 3, delay = 1000) {
   }
 }
 
+// Helper to unwrap API response
+function unwrapList(response) {
+  const payload = response.data
+  return {
+    data: payload?.data || [],
+    pagination: payload?.pagination || { page: 1, limit: 20, total: 0, pages: 0, hasNext: false, hasPrev: false }
+  }
+}
+
+function unwrapItem(response) {
+  return response.data?.data
+}
+
 export const apiService = {
   // Zayavki
   async getZayavki(filters = {}) {
@@ -60,7 +73,7 @@ export const apiService = {
 
     return retryRequest(async () => {
       const response = await api.get('/api/zayavki', { params: filters })
-      const data = response.data
+      const data = unwrapList(response)
       setCache(cacheKey, data)
       return data
     })
@@ -68,25 +81,25 @@ export const apiService = {
 
   async getZayavka(id) {
     const response = await api.get(`/api/zayavki/${id}`)
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async createZayavka(data) {
     const response = await api.post('/api/zayavki', data)
     clearCache('/api/zayavki')
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async updateZayavka(id, data) {
     const response = await api.patch(`/api/zayavki/${id}`, data)
     clearCache('/api/zayavki')
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async archiveZayavka(id) {
     const response = await api.patch(`/api/zayavki/${id}/archive`)
     clearCache('/api/zayavki')
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async deleteZayavka(id) {
@@ -97,13 +110,13 @@ export const apiService = {
   async getMyZayavki(filters = {}) {
     return retryRequest(async () => {
       const response = await api.get('/api/zayavki/my', { params: filters })
-      return response.data
+      return unwrapList(response)
     })
   },
 
   async getZayavkiStats() {
     const response = await api.get('/api/zayavki/stats')
-    return response.data.data
+    return response.data?.data
   },
 
   // Deshife
@@ -114,7 +127,7 @@ export const apiService = {
 
     return retryRequest(async () => {
       const response = await api.get('/api/deshife', { params })
-      const data = response.data
+      const data = unwrapList(response)
       setCache(cacheKey, data)
       return data
     })
@@ -122,24 +135,24 @@ export const apiService = {
 
   async getDeshifeByShifr(shifr) {
     const response = await api.get(`/api/deshife/${shifr}`)
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async createDeshife(data) {
     const response = await api.post('/api/deshife', data)
     clearCache('/api/deshife')
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async bulkCreateDeshife(items) {
     const response = await api.post('/api/deshife/bulk', items)
     clearCache('/api/deshife')
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async getDeshifeCategories() {
     const response = await api.get('/api/deshife/categories')
-    return response.data.data
+    return response.data?.data
   },
 
   // PhoneTabel
@@ -150,7 +163,7 @@ export const apiService = {
 
     return retryRequest(async () => {
       const response = await api.get('/api/phones', { params })
-      const data = response.data
+      const data = unwrapList(response)
       setCache(cacheKey, data)
       return data
     })
@@ -158,19 +171,19 @@ export const apiService = {
 
   async getPhone(tzeh) {
     const response = await api.get(`/api/phones/${tzeh}`)
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async createPhone(data) {
     const response = await api.post('/api/phones', data)
     clearCache('/api/phones')
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async bulkCreatePhones(items) {
     const response = await api.post('/api/phones/bulk', items)
     clearCache('/api/phones')
-    return response.data.data
+    return unwrapItem(response)
   },
 
   // Auth
@@ -186,7 +199,7 @@ export const apiService = {
 
   async getMe() {
     const response = await api.get('/api/auth/me')
-    return response.data.data
+    return unwrapItem(response)
   },
 
   async changePassword(oldPassword, newPassword) {
