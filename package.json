@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "dev": "quasar dev",
-    "build": "quasar build"
+    "build": "node scripts/generate-config.js && quasar build"
   },
   "dependencies": {
     "@openai/chatkit": "^1.0.0",
