@@ -11,13 +11,11 @@ const getBaseUrl = () => {
 }
 
 const getApi = () => {
-  if (!apiInstance) {
-    apiInstance = axios.create({ baseURL: getBaseUrl() })
-  }
-  return apiInstance
+  // Always create fresh instance with current config
+  return axios.create({ baseURL: getBaseUrl() })
 }
 
-// Export a proxy object that delegates to the lazy instance
+// Export a proxy object that delegates to a fresh lazy instance
 const apiProxy = new Proxy({}, {
   get(target, prop) {
     const api = getApi()
