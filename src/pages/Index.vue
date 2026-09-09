@@ -1,7 +1,7 @@
 <template>
   <q-page class="flex flex-center">
     <!-- Loading skeleton -->
-    <div v-if="loading && zayavki.length === 0" class="full_width" style="height: 100vh">
+    <div v-if="loading && (zayavki?.length === 0)" class="full_width" style="height: 100vh">
       <div class="row q-col-gutter-md q-px-md">
         <div v-for="i in 6" :key="i" class="col-12 col-md-6 col-lg-4">
           <q-card class="my-card q-mb-md animate-pulse">
@@ -22,7 +22,7 @@
         <div class="col-auto">
           <h4 class="text-h6 q-mb-none">Вакансии УВЗ</h4>
           <div class="text-caption text-grey-7">
-            Найдено: {{ pagination.total }} | Активных: {{ activeCount }}
+            Найдено: {{ pagination?.total || 0 }} | Активных: {{ activeCount }}
           </div>
         </div>
         <q-space />
@@ -44,7 +44,7 @@
         <div class="col-12 col-md-4">
           <q-select
             v-model="filters.tzeh"
-            :options="uniqueTzehs"
+            :options="uniqueTzehs || []"
             label="Цех"
             dense
             emit-value
@@ -104,44 +104,34 @@
         </div>
       </div>
 
-      <!-- Virtual scroll list -->
+      <!-- Simple list instead of virtual scroll for stability -->
       <div class="row q-col-gutter-md" style="min-height: 400px;">
-        <q-virtual-scroll
-          :items="zayavki"
-          :item-size="280"
-          :virtual-scroll-item-key="getItemKey"
-          :virtual-scroll-sticky-size-start="0"
-          :virtual-scroll-sticky-size-end="0"
-          class="col-12 col-md-6 col-lg-4"
-          style="height: calc(100vh - 300px); max-height: 700px;"
-        >
-          <template v-slot="{ item, index }">
-            <q-card class="my-card q-mb-md" :key="getItemKey(item)">
-              <q-card-section>
-                <ZayavkaCard
-                  :tzeh="item.tzeh"
-                  :professia="item.professia"
-                  :description="item.description"
-                  :date="item.date"
-                  :id="item._id || item.id"
-                  :requirements="item.requirements"
-                  :salary_min="item.salary_min"
-                  :salary_max="item.salary_max"
-                  :schedule="item.schedule"
-                  :experience_required="item.experience_required"
-                  :contact_name="item.contact_name"
-                  :contact_phone="item.contact_phone"
-                  :contact_email="item.contact_email"
-                  :status="item.status"
-                />
-              </q-card-section>
-            </q-card>
-          </template>
-        </q-virtual-scroll>
+        <div v-for="item in zayavki" :key="getItemKey(item)" class="col-12 col-md-6 col-lg-4">
+          <q-card class="my-card q-mb-md">
+            <q-card-section>
+              <ZayavkaCard
+                :tzeh="item.tzeh"
+                :professia="item.professia"
+                :description="item.description"
+                :date="item.date"
+                :id="item._id || item.id"
+                :requirements="item.requirements"
+                :salary_min="item.salary_min"
+                :salary_max="item.salary_max"
+                :schedule="item.schedule"
+                :experience_required="item.experience_required"
+                :contact_name="item.contact_name"
+                :contact_phone="item.contact_phone"
+                :contact_email="item.contact_email"
+                :status="item.status"
+              />
+            </q-card-section>
+          </q-card>
+        </div>
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination.pages > 1" class="row q-mt-md justify-center">
+      <div v-if="pagination?.pages > 1" class="row q-mt-md justify-center">
         <q-pagination
           v-model="pagination.page"
           :max="pagination.pages"
@@ -152,7 +142,7 @@
       </div>
 
       <!-- Empty state -->
-      <div v-if="!loading && zayavki.length === 0" class="text-center q-pa-xl">
+      <div v-if="!loading && (!zayavki || zayavki.length === 0)" class="text-center q-pa-xl">
         <q-icon name="work_off" size="64px" class="text-grey-4" />
         <div class="text-h6 q-mt-md">Вакансии не найдены</div>
         <div class="text-grey-7 q-mt-sm">
@@ -167,8 +157,8 @@
 </template>
 
 <script>
-import { ref, computed, watch, onBeforeMount, onMounted } from 'vue'
-import { useStore } from 'pinia'
+import { ref, computed, watch, onBeforeMount } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { useZayavkaStore } from 'stores/zayavka'
 import ZayavkaCard from 'components/ui/Zayavka.vue'
@@ -180,27 +170,26 @@ export default {
   setup() {
     const $q = useQuasar()
     const zayavkaStore = useZayavkaStore()
-    
+
+    // Use storeToRefs for proper reactivity
+    const {
+      zayavki,
+      loading,
+      error,
+      pagination,
+      filters,
+      uniqueTzehs,
+      uniqueProfessias,
+      activeZayavki
+    } = storeToRefs(zayavkaStore)
+
     // Local state
     const searchQuery = ref('')
     const showFilters = ref(false)
-    const debounceTimer = ref(null)
 
-    // Expose store state
-    const { 
-      zayavki, 
-      loading, 
-      error, 
-      pagination, 
-      filters, 
-      uniqueTzehs, 
-      uniqueProfessias,
-      activeZayavki
-    } = zayavkaStore
+    // Computed with defensive checks
+    const activeCount = computed(() => (activeZayavki.value || []).length)
 
-    // Computed
-    const activeCount = computed(() => activeZayavki.value.length)
-    
     const scheduleOptions = [
       { label: 'Полный день', value: 'Полный день' },
       { label: 'Сменный график', value: 'Сменный график' },
@@ -221,7 +210,7 @@ export default {
 
     // Debounced search
     const debouncedSearch = debounce(async (value) => {
-      await zayavkaStore.setFilters({ 
+      await zayavkaStore.setFilters({
         search: value || undefined,
         page: 1
       })
@@ -229,11 +218,11 @@ export default {
 
     // Pagination handlers
     async function onPageChange(page) {
-      await zayavkaStore.fetchZayavki({ ...filters, page })
+      await zayavkaStore.fetchZayavki({ ...filters.value, page })
     }
 
     async function onLimitChange(limit) {
-      await zayavkaStore.fetchZayavki({ ...filters, limit, page: 1 })
+      await zayavkaStore.fetchZayavki({ ...filters.value, limit, page: 1 })
     }
 
     // Initial load
@@ -251,10 +240,10 @@ export default {
     })
 
     return {
-      // State
+      // Local state
       searchQuery,
       showFilters,
-      // Store state
+      // Store state (refs)
       zayavki,
       loading,
       error,
@@ -299,9 +288,5 @@ export default {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-}
-/* Virtual scroll container */
-.q-virtual-scroll__content {
-  min-height: 100%;
 }
 </style>
