@@ -14,9 +14,9 @@ import lang from 'quasar/lang/ru'
 
 
 
-import {Meta,Notify,Loading,Dialog} from 'quasar'
+import {Meta,Notify} from 'quasar'
 
 
 
-export default { config: {"brand":{"primary":"#2563eb","secondary":"#16a34a","accent":"#f59e0b","danger":"#ef4444","dark":"#1e293b","positive":"#16a34a","negative":"#ef4444","info":"#3b82f6","warning":"#f59e0b"},"notify":{"position":"top","timeout":3000,"textColor":"white","actions":[{"icon":"close","color":"white"}]},"loading":{"color":"primary","size":"2rem"}},lang,plugins: {Meta,Notify,Loading,Dialog} }
+export default { config: {"brand":{}},lang,plugins: {Meta,Notify} }
 

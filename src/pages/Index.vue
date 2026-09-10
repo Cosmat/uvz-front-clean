@@ -1,46 +1,46 @@
 <template>
-  <q-page class="q-pa-md" style="max-width: var(--container-max); margin: 0 auto;">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 animate-slide-up">
-      <div>
-        <h1 class="text-3xl font-bold text-primary" style="line-height: var(--leading-tight);">
-          Вакансии УВЗ
-        </h1>
-        <p class="text-secondary mt-1">
-          Найдено: <span class="font-semibold text-primary">{{ pagination?.total || 0 }}</span>
-          | Активных: <span class="font-semibold text-secondary">{{ activeCount }}</span>
-        </p>
-      </div>
-      
-      <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-        <q-input
-          v-model="searchQuery"
-          @update:model-value="debouncedSearch"
-          placeholder="Поиск по профессии, цеху, описанию..."
-          dense
-          clearable
-          style="width: 100%; max-width: 400px;"
-          prefix="<q-icon name='search' color='text-tertiary' />"
-          class="input-modern"
-        />
-        <q-btn
-          :label="showFilters ? 'Скрыть фильтры' : 'Показать фильтры'"
-          @click="showFilters = !showFilters"
-          outline
-          class="whitespace-nowrap"
-        />
+  <q-page class="flex flex-center">
+    <!-- Loading skeleton -->
+    <div v-if="loading && (zayavki?.length === 0)" class="full_width" style="height: 100vh">
+      <div class="row q-col-gutter-md q-px-md">
+        <div v-for="i in 6" :key="i" class="col-12 col-md-6 col-lg-4">
+          <q-card class="my-card q-mb-md animate-pulse">
+            <q-card-section>
+              <q-skeleton-tag type="rect" width="60%" height="24px" />
+                            <q-skeleton-tag type="rect" width="100%" height="16px" />
+                            <q-skeleton-tag type="rect" width="80%" height="16px" />
+                            <q-skeleton-tag type="rect" width="100%" height="16px" />
+            </q-card-section>
+          </q-card>
+        </div>
       </div>
     </div>
 
-    <!-- Filters Panel -->
-    <q-expansion-item
-      v-model="showFilters"
-      :label="showFilters ? 'Фильтры' : 'Фильтры'"
-      :icon="showFilters ? 'expand_less' : 'expand_more'"
-      class="mb-6 animate-slide-down"
-      dense
-    >
-      <div class="row q-col-gutter-md q-mt-md" style="max-width: 100%;">
+    <div v-else class="q-pa-md full-width" style="max-width: 1400px; margin: 0 auto;">
+      <!-- Header with stats and search -->
+      <div class="row q-mb-md items-center">
+        <div class="col-auto">
+          <h4 class="text-h6 q-mb-none">Вакансии УВЗ</h4>
+          <div class="text-caption text-grey-7">
+            Найдено: {{ pagination?.total || 0 }} | Активных: {{ activeCount }}
+          </div>
+        </div>
+        <q-space />
+        <div class="col-auto">
+          <q-input
+            v-model="searchQuery"
+            @update:model-value="debouncedSearch"
+            placeholder="Поиск по профессии, цеху, описанию..."
+            dense
+            clearable
+            style="width: 300px"
+            prefix="<q-icon name='search' />"
+          />
+        </div>
+      </div>
+
+      <!-- Filters row -->
+      <div class="row q-col-gutter-sm q-mb-md" v-if="showFilters">
         <div class="col-12 col-md-4">
           <q-select
             v-model="filters.tzeh"
@@ -52,7 +52,6 @@
             option-value="value"
             option-label="label"
             clearable
-            style="width: 100%"
           />
         </div>
         <div class="col-12 col-md-4">
@@ -66,7 +65,6 @@
             option-value="value"
             option-label="label"
             clearable
-            style="width: 100%"
           />
         </div>
         <div class="col-12 col-md-4">
@@ -80,85 +78,100 @@
             option-value="value"
             option-label="label"
             clearable
-            style="width: 100%"
           />
         </div>
       </div>
-    </q-expansion-item>
 
-    <!-- Loading Skeleton -->
-    <div v-if="loading && (!zayavki || zayavki.length === 0)" class="animate-fade-in">
-      <div class="row q-col-gutter-md">
-        <div v-for="i in 6" :key="i" class="col-12 col-md-6 col-lg-4">
-          <div class="card p-5 skeleton-card animate-pulse" />
+      <div class="row q-mb-md">
+        <div class="col-auto">
+          <q-btn
+            :label="showFilters ? 'Скрыть фильтры' : 'Показать фильтры'"
+            @click="showFilters = !showFilters"
+            outline
+            size="sm"
+          />
+        </div>
+        <q-space />
+        <div class="col-auto">
+          <q-select
+            v-model="pagination.limit"
+            :options="[10, 20, 50, 100]"
+            label="На странице"
+            dense
+            style="width: 140px"
+            @update:model-value="onLimitChange"
+          />
         </div>
       </div>
-    </div>
 
-    <!-- Vacancies Grid -->
-    <div v-else-if="zayavki && zayavki.length > 0" class="animate-slide-up">
-      <div class="row q-col-gutter-md">
-        <VacancyCard
-          v-for="item in zayavki"
-          :key="item._id || item.id"
-          :item="item"
-          class="col-12 col-md-6 col-lg-4"
-        />
+      <!-- Simple list instead of virtual scroll for stability -->
+      <div class="row q-col-gutter-md" style="min-height: 400px;">
+        <div v-for="item in zayavki" :key="getItemKey(item)" class="col-12 col-md-6 col-lg-4">
+          <q-card class="my-card q-mb-md">
+            <q-card-section>
+              <ZayavkaCard
+                :tzeh="item.tzeh"
+                :professia="item.professia"
+                :description="item.description"
+                :date="item.date"
+                :id="item._id || item.id"
+                :requirements="item.requirements"
+                :salary_min="item.salary_min"
+                :salary_max="item.salary_max"
+                :schedule="item.schedule"
+                :experience_required="item.experience_required"
+                :contact_name="item.contact_name"
+                :contact_phone="item.contact_phone"
+                :contact_email="item.contact_email"
+                :status="item.status"
+              />
+            </q-card-section>
+          </q-card>
+        </div>
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination?.pages > 1" class="flex justify-center mt-8 animate-fade-in">
+      <div v-if="pagination?.pages > 1" class="row q-mt-md justify-center">
         <q-pagination
           v-model="pagination.page"
           :max="pagination.pages"
           :boundary-links="true"
           :boundary-numbers="true"
           @input="onPageChange"
-          color="primary"
-          class="w-auto"
         />
+      </div>
+
+      <!-- Empty state -->
+      <div v-if="!loading && (!zayavki || zayavki.length === 0)" class="text-center q-pa-xl">
+        <q-icon name="work_off" size="64px" class="text-grey-4" />
+        <div class="text-h6 q-mt-md">Вакансии не найдены</div>
+        <div class="text-grey-7 q-mt-sm">
+          Попробуйте изменить фильтры или поиск
+        </div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else class="empty-state animate-fade-in">
-      <q-icon name="work_off" size="80px" class="empty-state-icon" />
-      <h3 class="empty-state-title">Вакансии не найдены</h3>
-      <p class="empty-state-text">Попробуйте изменить фильтры или поиск</p>
-      <q-btn
-        color="primary"
-        label="Сбросить фильтры"
-        @click="clearFilters"
-        class="mt-4"
-      />
-    </div>
-
-    <!-- Error Toast -->
-    <q-toast
-      v-if="error"
-      :message="error"
-      color="negative"
-      position="top"
-      class="toast-modern"
-    />
+    <!-- Error toast -->
+    <q-toast v-if="error" :message="error" color="negative" position="top" />
   </q-page>
 </template>
 
 <script>
 import { ref, computed, watch, onBeforeMount } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useZayavkaStore } from 'stores/zayavka'
 import { useQuasar } from 'quasar'
+import { useZayavkaStore } from 'stores/zayavka'
+import ZayavkaCard from 'components/ui/Zayavka.vue'
 import { debounce } from 'quasar'
-import VacancyCard from 'components/ui/VacancyCard.vue'
 
 export default {
   name: 'PageIndex',
-  components: { VacancyCard },
+  components: { ZayavkaCard },
   setup() {
     const $q = useQuasar()
     const zayavkaStore = useZayavkaStore()
 
+    // Use storeToRefs for proper reactivity
     const {
       zayavki,
       loading,
@@ -170,9 +183,11 @@ export default {
       activeZayavki
     } = storeToRefs(zayavkaStore)
 
+    // Local state
     const searchQuery = ref('')
     const showFilters = ref(false)
 
+    // Computed with defensive checks
     const activeCount = computed(() => (activeZayavki.value || []).length)
 
     const scheduleOptions = [
@@ -191,6 +206,9 @@ export default {
       { label: 'Не указано', value: 'Не указано' }
     ]
 
+    const getItemKey = (item) => item._id || item.id || `temp-${Math.random()}`
+
+    // Debounced search
     const debouncedSearch = debounce(async (value) => {
       await zayavkaStore.setFilters({
         search: value || undefined,
@@ -198,6 +216,7 @@ export default {
       })
     }, 300)
 
+    // Pagination handlers
     async function onPageChange(page) {
       await zayavkaStore.fetchZayavki({ ...filters.value, page })
     }
@@ -206,17 +225,13 @@ export default {
       await zayavkaStore.fetchZayavki({ ...filters.value, limit, page: 1 })
     }
 
-    async function clearFilters() {
-      filters.value = {}
-      searchQuery.value = ''
-      await zayavkaStore.fetchZayavki({})
-    }
-
+    // Initial load
     onBeforeMount(async () => {
       await zayavkaStore.fetchZayavki()
       await zayavkaStore.fetchStats()
     })
 
+    // Watch for errors
     watch(() => zayavkaStore.error, (err) => {
       if (err) {
         $q.notify({ message: err, color: 'negative', position: 'top' })
@@ -225,8 +240,10 @@ export default {
     })
 
     return {
+      // Local state
       searchQuery,
       showFilters,
+      // Store state (refs)
       zayavki,
       loading,
       error,
@@ -237,120 +254,39 @@ export default {
       activeCount,
       scheduleOptions,
       experienceOptions,
+      getItemKey,
+      // Methods
       onPageChange,
-      onLimitChange,
-      clearFilters
+      onLimitChange
     }
   }
 }
 </script>
 
 <style scoped>
-.input-modern :deep(.q-input__inner) {
-  background: var(--bg-elevated) !important;
-  border: 1px solid var(--border-light) !important;
-  border-radius: var(--radius-md) !important;
-  color: var(--text-primary) !important;
+.full_width {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-
-.input-modern :deep(.q-input__inner:focus) {
-  border-color: var(--border-focus) !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+.full-width {
+  width: 100%;
 }
-
-.input-modern :deep(.q-field__prefix) {
-  color: var(--text-tertiary) !important;
+.my-card {
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(25, 118, 210, 0.08);
+  background: #fff;
+  transition: box-shadow 0.2s, transform 0.2s;
 }
-
-.card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-normal);
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
+.my-card:hover {
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.15);
   transform: translateY(-2px);
-  border-color: var(--border-medium);
 }
-
-.animate-fade-in { animation: fadeIn var(--transition-normal) ease-out; }
-.animate-slide-up { animation: slideUp var(--transition-normal) ease-out; }
-.animate-slide-down { animation: slideDown var(--transition-normal) ease-out; }
-.animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
 }
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.skeleton-card {
-  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-lg);
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-12);
-  text-align: center;
-  color: var(--text-secondary);
-}
-
-.empty-state-icon {
-  width: 80px;
-  height: 80px;
-  margin-bottom: var(--space-4);
-  color: var(--color-neutral-300);
-}
-
-[data-theme="dark"] .empty-state-icon {
-  color: var(--color-neutral-600);
-}
-
-.empty-state-title {
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin-bottom: var(--space-2);
-}
-
-.empty-state-text {
-  font-size: var(--text-base);
-  max-width: 300px;
-}
-
-/* Toast styling */
-.toast-modern :deep(.q-toast) {
-  background: var(--bg-elevated) !important;
-  border: 1px solid var(--border-light) !important;
-  border-radius: var(--radius-lg) !important;
-  box-shadow: var(--shadow-lg) !important;
 }
 </style>
