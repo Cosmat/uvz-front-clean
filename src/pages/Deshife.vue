@@ -1,76 +1,135 @@
 <template>
-  <q-page class="q-pa-md full-width" style="max-width: 1200px; margin: 0 auto;">
-    <div class="row q-mb-md items-center">
-      <div class="col-auto">
-        <h4 class="text-h6 q-mb-none">Дешифратор кодов зарплаты</h4>
-        <div class="text-caption text-grey-7">
-          Всего кодов: {{ pagination?.total || 0 }}
-        </div>
+  <q-page class="q-pa-md" style="max-width: var(--container-max); margin: 0 auto;">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 animate-slide-up">
+      <div>
+        <h1 class="text-3xl font-bold text-primary" style="line-height: var(--leading-tight);">
+          Дешифратор кодов зарплаты
+        </h1>
+        <p class="text-secondary mt-1">
+          Всего кодов: <span class="font-semibold text-primary">{{ pagination?.total || 0 }}</span>
+        </p>
       </div>
-      <q-space />
-      <div class="col-auto">
+      
+      <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
         <q-input
           v-model="searchQuery"
           @update:model-value="debouncedSearch"
           placeholder="Поиск по шифру или описанию..."
           dense
           clearable
-          style="width: 350px"
-          prefix="<q-icon name='search' />"
+          style="width: 100%; max-width: 400px;"
+          prefix="<q-icon name='search' color='text-tertiary' />"
+          class="input-modern"
         />
       </div>
     </div>
 
-    <!-- Category filter -->
-    <div v-if="(categories?.length || 0) > 0" class="row q-col-gutter-sm q-mb-md">
-      <div class="col-12 col-md-4">
-        <q-select
-          v-model="selectedCategory"
-          :options="categoryOptions"
-          label="Категория"
-          dense
-          emit-value
-          map-options
-          option-value="value"
-          option-label="label"
-          clearable
+    <!-- Category Filter -->
+    <div v-if="(categories?.length || 0) > 0" class="mb-6 animate-slide-down">
+      <q-select
+        v-model="selectedCategory"
+        :options="categoryOptions"
+        label="Категория"
+        dense
+        emit-value
+        map-options
+        option-value="value"
+        option-label="label"
+        clearable
+        style="width: 100%; max-width: 300px;"
+        class="input-modern"
+      />
+    </div>
+
+    <!-- Loading Skeleton -->
+    <div v-if="loading && (!deshife || deshife.length === 0)" class="animate-fade-in">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Шифр</th>
+              <th>Описание</th>
+              <th>Категория</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="i in 8" :key="i">
+              <td><div class="skeleton skeleton-text short" style="width: 80px; height: 16px;" /></td>
+              <td><div class="skeleton skeleton-text" style="height: 16px;" /></td>
+              <td><div class="skeleton skeleton-text short" style="width: 100px; height: 16px;" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div v-else-if="deshife && deshife.length > 0" class="animate-slide-up">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width: 120px;">Шифр</th>
+              <th>Описание</th>
+              <th style="width: 180px;">Категория</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in deshife" :key="item.shifr" @click="copyShifr(item.shifr)" class="cursor-pointer hover-row">
+              <td>
+                <code class="font-mono text-primary font-semibold">{{ item.shifr }}</code>
+              </td>
+              <td class="text-secondary max-w-xl truncate">{{ item.description }}</td>
+              <td>
+                <q-badge
+                  :label="item.category"
+                  :color="getCategoryColor(item.category)"
+                  size="sm"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="pagination?.pages > 1" class="flex justify-center mt-6 animate-fade-in">
+        <q-pagination
+          v-model="pagination.page"
+          :max="pagination.pages"
+          :boundary-links="true"
+          :boundary-numbers="true"
+          @input="onPageChange"
+          color="primary"
+          class="w-auto"
         />
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="q-overflow-auto">
-      <q-table
-        :rows="deshife || []"
-        :columns="columns"
-        row-key="shifr"
-        :loading="loading"
-        :pagination="pagination"
-        flat
-        bordered
-        separator="cell"
-        wrap-cells
-      >
-        <template v-slot:header="props">
-          <q-tr :props="props">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">
-              {{ col.label }}
-            </q-th>
-          </q-tr>
-        </template>
-
-        <template v-slot:body-cell-description="props">
-          <div class="text-body2">{{ props.value }}</div>
-        </template>
-
-        <template v-slot:body-cell-category="props">
-          <q-chip :label="props.value" :color="getCategoryColor(props.value)" size="sm" />
-        </template>
-      </q-table>
+    <!-- Empty State -->
+    <div v-else class="empty-state animate-fade-in">
+      <q-icon name="font_download" size="80px" class="empty-state-icon" />
+      <h3 class="empty-state-title">Коды не найдены</h3>
+      <p class="empty-state-text">Попробуйте изменить поиск или категорию</p>
     </div>
 
-    <!-- Error toast -->
-    <q-toast v-if="error" :message="error" color="negative" position="top" />
+    <!-- Toast -->
+    <q-toast
+      v-if="copiedShifr"
+      :message="'Шифр ' + copiedShifr + ' скопирован'"
+      color="positive"
+      position="top"
+      class="toast-modern"
+    />
+
+    <q-toast
+      v-if="error"
+      :message="error"
+      color="negative"
+      position="top"
+      class="toast-modern"
+    />
   </q-page>
 </template>
 
@@ -87,7 +146,6 @@ export default {
     const $q = useQuasar()
     const deshifeStore = useDeshifeStore()
 
-    // Use storeToRefs for proper reactivity
     const {
       deshife,
       loading,
@@ -98,23 +156,18 @@ export default {
 
     const searchQuery = ref('')
     const selectedCategory = ref(null)
+    const copiedShifr = ref(null)
 
     const categoryOptions = computed(() => [
-      { label: 'Все', value: null },
+      { label: 'Все категории', value: null },
       ...(categories.value || []).map(c => ({ label: c, value: c }))
     ])
 
-    const columns = [
-      { name: 'shifr', label: 'Шифр', field: 'shifr', align: 'center', sortable: true },
-      { name: 'description', label: 'Описание', field: 'description', sortable: false },
-      { name: 'category', label: 'Категория', field: 'category', align: 'center', sortable: true }
-    ]
-
     const getCategoryColor = (cat) => {
       switch (cat) {
-        case 'Начисления': return 'green'
-        case 'Удержания': return 'red'
-        default: return 'grey'
+        case 'Начисления': return 'secondary'
+        case 'Удержания': return 'danger'
+        default: return 'primary'
       }
     }
 
@@ -134,6 +187,24 @@ export default {
       })
     })
 
+    async function onPageChange(page) {
+      await deshifeStore.fetchDeshife({
+        search: searchQuery.value || undefined,
+        category: selectedCategory.value || undefined,
+        page
+      })
+    }
+
+    async function copyShifr(shifr) {
+      try {
+        await navigator.clipboard.writeText(shifr)
+        copiedShifr.value = shifr
+        setTimeout(() => { copiedShifr.value = null }, 2000)
+      } catch (e) {
+        $q.notify({ message: 'Не удалось скопировать', color: 'negative', position: 'top' })
+      }
+    }
+
     onBeforeMount(async () => {
       await deshifeStore.fetchDeshife({ limit: 100 })
       await deshifeStore.fetchCategories()
@@ -146,27 +217,191 @@ export default {
     })
 
     return {
+      searchQuery,
+      selectedCategory,
+      categoryOptions,
       deshife,
       loading,
       error,
       pagination,
       categories,
-      searchQuery,
-      selectedCategory,
-      categoryOptions,
-      columns,
-      getCategoryColor
+      copiedShifr,
+      getCategoryColor,
+      onPageChange
     }
   }
 }
 </script>
 
 <style scoped>
-.full-width {
-  width: 100%;
+.input-modern :deep(.q-input__inner) {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
 }
-.q-table__cell {
-  white-space: normal;
-  word-break: break-word;
+
+.input-modern :deep(.q-input__inner:focus) {
+  border-color: var(--border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+.table-container {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+
+.table th {
+  font-weight: var(--font-semibold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.hover-row:hover {
+  background: var(--bg-tertiary) !important;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.animate-fade-in { animation: fadeIn var(--transition-normal) ease-out; }
+.animate-slide-up { animation: slideUp var(--transition-normal) ease-out; }
+.animate-slide-down { animation: slideDown var(--transition-normal) ease-out; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.table-container {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+
+.table th {
+  font-weight: var(--font-semibold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.hover-row:hover {
+  background: var(--bg-tertiary) !important;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.animate-fade-in { animation: fadeIn var(--transition-normal) ease-out; }
+.animate-slide-up { animation: slideUp var(--transition-normal) ease-out; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-state-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: var(--space-4);
+  color: var(--color-neutral-300);
+}
+
+[data-theme="dark"] .empty-state-icon {
+  color: var(--color-neutral-600);
+}
+
+.empty-state-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.empty-state-text {
+  font-size: var(--text-base);
+  max-width: 300px;
 }
 </style>

@@ -10,6 +10,9 @@
     "build": "quasar build"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fortawesome/fontawesome-free": "^7.3.1",
     "@openai/chatkit": "^1.0.0",
     "@quasar/cli": "^1.4.0",
     "@quasar/extras": "^1.0.0",

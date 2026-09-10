@@ -22,7 +22,10 @@ module.exports = configure(function (ctx) {
     boot: ["axios", "pinia"],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
-    css: ["app.scss"],
+    css: [
+      "app.scss",
+      "styles/design-system.css"
+    ],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
@@ -33,13 +36,17 @@ module.exports = configure(function (ctx) {
       // 'themify',
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
-      "roboto-font", // optional, you are not bound to it
-      "material-icons", // optional, you are not bound to it
+      "roboto-font",
+      "material-icons",
+      "fontawesome-v6",
+      // Google Fonts - Inter & JetBrains Mono
+      "@fontsource/inter",
+      "@fontsource/jetbrains-mono"
     ],
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
-      vueRouterMode: "hash", // available values: 'hash', 'history'
+      vueRouterMode: "hash",
 
       // transpile: false,
       // publicPath: '/',
@@ -75,37 +82,55 @@ module.exports = configure(function (ctx) {
     devServer: {
       https: false,
       port: 8080,
-      open: true, // opens browser window automatically
+      open: true,
     },
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
     framework: {
       config: {},
-      lang: "ru", // Quasar language pack
-      // iconSet: 'material-icons', // Quasar icon set
-      // lang: 'en-US', // Quasar language pack
+      lang: "ru",
+      // iconSet: 'material-icons',
+      // lang: 'en-US',
 
       // For special cases outside of where the auto-import strategy can have an impact
       // (like functional components as one of the examples),
       // you can manually specify Quasar components/directives to be available everywhere:
-      //
       // components: [],
       // directives: [],
 
       // Quasar plugins
-      plugins: ["Meta", "Notify"],
+      plugins: ["Meta", "Notify", "Loading", "Dialog"],
 
       config: {
         brand: {
-          //primary: "#ff0000",
-          // ...
+          primary: "#2563eb",
+          secondary: "#16a34a",
+          accent: "#f59e0b",
+          danger: "#ef4444",
+          dark: "#1e293b",
+          positive: "#16a34a",
+          negative: "#ef4444",
+          info: "#3b82f6",
+          warning: "#f59e0b"
         },
+        notify: {
+          position: "top",
+          timeout: 3000,
+          textColor: "white",
+          actions: [{ icon: "close", color: "white" }]
+        },
+        loading: {
+          color: "primary",
+          size: "2rem"
+        }
       },
+      // Disable default Quasar CSS injection since we have our design system
+      cssAddon: false
     },
 
-    // animations: 'all', // --- includes all animations
-    // https://quasar.dev/options/animations
-    animations: [],
+    // animations: 'all',
+    // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-animations
+    animations: ["fadeIn", "slideUp", "slideDown", "scale"],
 
     // https://quasar.dev/quasar-cli/developing-ssr/configuring-ssr
     ssr: {
@@ -114,11 +139,9 @@ module.exports = configure(function (ctx) {
       // manualStoreHydration: true,
       // manualPostHydrationTrigger: true,
 
-      prodPort: 3000, // The default port that the production server should use
-      // (gets superseded if process.env.PORT is specified at runtime)
+      prodPort: 3000,
 
       maxAge: 1000 * 60 * 60 * 24 * 30,
-      // Tell browser when a file from the server should expire from cache (in ms)
 
       chainWebpackWebserver(/* chain */) {
         //
@@ -126,29 +149,27 @@ module.exports = configure(function (ctx) {
 
       middlewares: [
         ctx.prod ? "compression" : "",
-        "render", // keep this as last one
+        "render",
       ],
     },
 
     // https://quasar.dev/quasar-cli/developing-pwa/configuring-pwa
     pwa: {
-      workboxPluginMode: "GenerateSW", // 'GenerateSW' or 'InjectManifest'
-      workboxOptions: {}, // only for GenerateSW
+      workboxPluginMode: "GenerateSW",
+      workboxOptions: {},
 
-      // for the custom service worker ONLY (/src-pwa/custom-service-worker.[js|ts])
-      // if using workbox in InjectManifest mode
       chainWebpackCustomSW(/* chain */) {
         //
       },
 
       manifest: {
-        name: `Quasar App`,
-        short_name: `Quasar App`,
-        description: `A Quasar Framework app`,
+        name: `УВЗ — Биржа труда`,
+        short_name: `УВЗ Работа`,
+        description: `Биржа труда Уралвагонзавод — вакансии, дешифратор, телефоны цехов`,
         display: "standalone",
         orientation: "portrait",
         background_color: "#ffffff",
-        theme_color: "#027be3",
+        theme_color: "#2563eb",
         icons: [
           {
             src: "icons/icon-128x128.png",
@@ -179,22 +200,21 @@ module.exports = configure(function (ctx) {
       },
     },
 
-    // Full list of options: https://quasar.dev/quasar-cli/developing-cordova-apps/configuring-cordova
+    // https://quasar.dev/quasar-cli/developing-cordova-apps/configuring-cordova
     cordova: {
-      // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
+      // noIosLegacyBuildFlag: true,
     },
 
-    // Full list of options: https://quasar.dev/quasar-cli/developing-capacitor-apps/configuring-capacitor
+    // https://quasar.dev/quasar-cli/developing-capacitor-apps/configuring-capacitor
     capacitor: {
       hideSplashscreen: true,
     },
 
-    // Full list of options: https://quasar.dev/quasar-cli/developing-electron-apps/configuring-electron
+    // https://quasar.dev/quasar-cli/developing-electron-apps/configuring-electron
     electron: {
-      bundler: "packager", // 'packager' or 'builder'
+      bundler: "packager",
 
       packager: {
-        // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
         // OS X / Mac App Store
         // appBundleId: '',
         // appCategoryType: '',
@@ -206,16 +226,14 @@ module.exports = configure(function (ctx) {
 
       builder: {
         // https://www.electron.build/configuration/configuration
-        appId: "v_07",
+        appId: "uzv.job.exchange",
       },
 
-      // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
       chainWebpackMain(/* chain */) {
         // do something with the Electron main process Webpack cfg
         // extendWebpackMain also available besides this chainWebpackMain
       },
 
-      // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
       chainWebpackPreload(/* chain */) {
         // do something with the Electron main process Webpack cfg
         // extendWebpackPreload also available besides this chainWebpackPreload

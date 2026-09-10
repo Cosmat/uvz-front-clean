@@ -1,11 +1,21 @@
+// Quasar User Options
+// https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
 
-import './styles/quasar.sass'
-import '@quasar/extras/roboto-font/roboto-font.css'
-import '@quasar/extras/material-icons/material-icons.css'
-
-// To be used on app.use(Quasar, { ... })
 export default {
-  config: {},
+  config: {
+    // Brand colors are now in quasar.conf.js
+  },
   plugins: {
+    Notify: {
+      position: 'top',
+      timeout: 3000,
+      textColor: 'white',
+      actions: [{ icon: 'close', color: 'white' }]
+    },
+    Loading: {
+      color: 'primary',
+      size: '2rem'
+    },
+    Dialog: {}
   }
 }
