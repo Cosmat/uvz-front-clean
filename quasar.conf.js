@@ -10,33 +10,21 @@ const path = require("path");
 
 module.exports = configure(function (ctx) {
   return {
-    // https://quasar.dev/quasar-cli/supporting-ts
     supportTS: false,
 
-    // https://quasar.dev/quasar-cli/prefetch-feature
-    // preFetch: true,
-
-    // app boot file (/src/boot)
-    // --> boot files are part of "main.js"
-    // https://quasar.dev/quasar-cli/boot-files
     boot: ["axios", "pinia"],
 
-    // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
     css: [
       "app.scss",
       "assets/styles/design-system.css"
     ],
 
-    // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
       "roboto-font",
       "material-icons",
-      "fontawesome-v6",
-      "@fontsource/inter",
-      "@fontsource/jetbrains-mono"
+      "fontawesome-v6"
     ],
 
-    // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
       vueRouterMode: "hash",
 
@@ -48,19 +36,16 @@ module.exports = configure(function (ctx) {
       },
     },
 
-    // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
     devServer: {
       https: false,
       port: 8080,
       open: true,
     },
 
-    // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
     framework: {
       config: {},
       lang: "ru",
 
-      // Quasar plugins
       plugins: ["Meta", "Notify", "Loading", "Dialog"],
 
       config: {
@@ -86,11 +71,9 @@ module.exports = configure(function (ctx) {
           size: "2rem"
         }
       },
-      // Disable default Quasar CSS injection since we have our design system
       cssAddon: false
     },
 
-    // https://quasar.dev/quasar-cli/developing-ssr/configuring-ssr
     ssr: {
       pwa: false,
 
@@ -108,7 +91,6 @@ module.exports = configure(function (ctx) {
       ],
     },
 
-    // https://quasar.dev/quasar-cli/developing-pwa/configuring-pwa
     pwa: {
       workboxPluginMode: "GenerateSW",
       workboxOptions: {},
@@ -155,44 +137,24 @@ module.exports = configure(function (ctx) {
       },
     },
 
-    // https://quasar.dev/quasar-cli/developing-cordova-apps/configuring-cordova
-    cordova: {
-      // noIosLegacyBuildFlag: true,
-    },
+    cordova: {},
 
-    // https://quasar.dev/quasar-cli/developing-capacitor-apps/configuring-capacitor
     capacitor: {
       hideSplashscreen: true,
     },
 
-    // https://quasar.dev/quasar-cli/developing-electron-apps/configuring-electron
     electron: {
       bundler: "packager",
 
-      packager: {
-        // OS X / Mac App Store
-        // appBundleId: '',
-        // appCategoryType: '',
-        // osxSign: '',
-        // protocol: 'myapp://path',
-        // Windows only
-        // win32metadata: { ... }
-      },
+      packager: {},
 
       builder: {
-        // https://www.electron.build/configuration/configuration
         appId: "uzv.job.exchange",
       },
 
-      chainWebpackMain(/* chain */) {
-        // do something with the Electron main process Webpack cfg
-        // extendWebpackMain also available besides this chainWebpackMain
-      },
+      chainWebpackMain(/* chain */) {},
 
-      chainWebpackPreload(/* chain */) {
-        // do something with the Electron main process Webpack cfg
-        // extendWebpackPreload also available besides this chainWebpackPreload
-      },
+      chainWebpackPreload(/* chain */) {},
     },
   };
 });
