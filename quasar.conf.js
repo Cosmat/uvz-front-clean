@@ -24,22 +24,14 @@ module.exports = configure(function (ctx) {
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
     css: [
       "app.scss",
-      "styles/design-system.css"
+      "assets/styles/design-system.css"
     ],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
-      // 'ionicons-v4',
-      // 'mdi-v5',
-      // 'fontawesome-v5',
-      // 'eva-icons',
-      // 'themify',
-      // 'line-awesome',
-      // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
       "roboto-font",
       "material-icons",
       "fontawesome-v6",
-      // Google Fonts - Inter & JetBrains Mono
       "@fontsource/inter",
       "@fontsource/jetbrains-mono"
     ],
@@ -48,34 +40,12 @@ module.exports = configure(function (ctx) {
     build: {
       vueRouterMode: "hash",
 
-      // transpile: false,
-      // publicPath: '/',
-
-      // Add dependencies for transpiling with Babel (Array of string/regex)
-      // (from node_modules, which are by default not transpiled).
-      // Applies only if "transpile" is set to true.
-      // transpileDependencies: [],
-
-      // rtl: true, // https://quasar.dev/options/rtl-support
-      // preloadChunks: true,
-      // showProgress: false,
-      // gzip: true,
-      // analyze: true,
-
-      // Options below are automatically set depending on the env, set them if you want to override
-      // extractCSS: false,
-
-      // https://quasar.dev/quasar-cli/handling-webpack
-      // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
       chainWebpack(chain) {
         chain.resolve.alias.set("@", path.resolve(__dirname, "src"))
         chain.plugin("provide").use(require("webpack").ProvidePlugin, [{
           process: "process/browser"
         }])
       },
-
-      // Options below are automatically set depending on the env, set them if you want to override
-      // extractCSS: false,
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
@@ -89,14 +59,6 @@ module.exports = configure(function (ctx) {
     framework: {
       config: {},
       lang: "ru",
-      // iconSet: 'material-icons',
-      // lang: 'en-US',
-
-      // For special cases outside of where the auto-import strategy can have an impact
-      // (like functional components as one of the examples),
-      // you can manually specify Quasar components/directives to be available everywhere:
-      // components: [],
-      // directives: [],
 
       // Quasar plugins
       plugins: ["Meta", "Notify", "Loading", "Dialog"],
@@ -128,16 +90,9 @@ module.exports = configure(function (ctx) {
       cssAddon: false
     },
 
-    // animations: 'all',
-    // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-animations
-    animations: ["fadeIn", "slideUp", "slideDown", "scale"],
-
     // https://quasar.dev/quasar-cli/developing-ssr/configuring-ssr
     ssr: {
       pwa: false,
-
-      // manualStoreHydration: true,
-      // manualPostHydrationTrigger: true,
 
       prodPort: 3000,
 
