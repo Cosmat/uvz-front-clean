@@ -7,9 +7,9 @@
           <q-card class="my-card q-mb-md animate-pulse">
             <q-card-section>
               <q-skeleton-tag type="rect" width="60%" height="24px" />
-                            <q-skeleton-tag type="rect" width="100%" height="16px" />
-                            <q-skeleton-tag type="rect" width="80%" height="16px" />
-                            <q-skeleton-tag type="rect" width="100%" height="16px" />
+              <q-skeleton-tag type="rect" width="100%" height="16px" />
+              <q-skeleton-tag type="rect" width="80%" height="16px" />
+              <q-skeleton-tag type="rect" width="100%" height="16px" />
             </q-card-section>
           </q-card>
         </div>
