@@ -431,3 +431,4 @@ export default defineComponent({
   background: var(--color-neutral-400);
   border-radius: 3px;
 }
+</style>

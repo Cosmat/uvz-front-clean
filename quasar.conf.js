@@ -16,7 +16,7 @@ module.exports = configure(function (ctx) {
 
     css: [
       "app.scss",
-      "src/assets/styles/design-system.css"
+      "design-system.css"
     ],
 
     extras: [
