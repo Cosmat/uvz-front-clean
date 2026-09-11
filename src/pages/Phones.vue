@@ -41,26 +41,26 @@
           </q-tr>
         </template>
 
-        <template v-slot:body-cell-nuber_phone="props">
-          <div class="row items-center q-gutter-xs">
-            <div class="col-auto">
-              <a :href="'tel:' + formatPhoneForTel(props.value)" class="text-primary">
-                {{ formatPhone(props.value) }}
-              </a>
-            </div>
-            <div class="col-auto">
-              <q-btn
-                size="sm"
-                dense
-                flat
-                round
-                icon="content_copy"
-                @click="copyPhone(props.value)"
-                aria-label="Скопировать телефон"
-              />
-            </div>
-          </div>
-        </template>
+        <template v-slot:body-cell-phone_number="props">
+                  <div class="row items-center q-gutter-xs">
+                    <div class="col-auto">
+                      <a :href="'tel:' + formatPhoneForTel(props.value)" class="text-primary">
+                        {{ formatPhone(props.value) }}
+                      </a>
+                    </div>
+                    <div class="col-auto">
+                      <q-btn
+                        size="sm"
+                        dense
+                        flat
+                        round
+                        icon="content_copy"
+                        @click="copyPhone(props.value)"
+                        aria-label="Скопировать телефон"
+                      />
+                    </div>
+                  </div>
+                </template>
 
         <template v-slot:body-cell-description="props">
           <div v-if="props.value" class="text-caption text-grey-7">{{ props.value }}</div>
@@ -98,10 +98,10 @@ export default {
     const searchQuery = ref('')
 
     const columns = [
-      { name: 'number_tzeh', label: 'Цех', field: 'number_tzeh', align: 'center', sortable: true },
-      { name: 'nuber_phone', label: 'Телефон', field: 'nuber_phone', sortable: false },
-      { name: 'description', label: 'Описание', field: 'description', sortable: false }
-    ]
+          { name: 'number_tzeh', label: 'Цех', field: 'number_tzeh', align: 'center', sortable: true },
+          { name: 'phone_number', label: 'Телефон', field: 'phone_number', sortable: false },
+          { name: 'description', label: 'Описание', field: 'description', sortable: false }
+        ]
 
     const formatPhone = (phone) => {
       if (!phone) return ''
