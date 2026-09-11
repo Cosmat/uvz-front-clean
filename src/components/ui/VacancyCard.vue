@@ -5,18 +5,18 @@
       <div class="flex items-start justify-between gap-2 mb-3">
         <div class="flex items-center gap-2 flex-1 min-w-0">
           <q-badge
-            :label="item.tzeh"
+            :label="item?.tzeh || '—'"
             color="primary"
             class="text-xs font-medium flex-shrink-0"
             style="min-width: 50px;"
           />
           <span class="text-xs text-tertiary font-medium truncate block">
-            Цех {{ item.tzeh }}
+            Цех {{ item?.tzeh || '—' }}
           </span>
         </div>
         <q-badge
-          :label="item.status || 'Активная'"
-          :color="getStatusColor(item.status)"
+          :label="item?.status || 'Активная'"
+          :color="getStatusColor(item?.status)"
           size="sm"
           class="flex-shrink-0"
         />
@@ -24,34 +24,34 @@
 
       <!-- Profession title -->
       <h3 class="text-lg font-semibold text-primary mb-2 line-clamp-2" style="line-height: 1.3;">
-        {{ item.professia }}
+        {{ item?.professia || '—' }}
       </h3>
 
       <!-- Description -->
-      <p v-if="item.description" class="text-secondary text-sm mb-3 line-clamp-3" style="line-height: 1.5;">
+      <p v-if="item?.description" class="text-secondary text-sm mb-3 line-clamp-3" style="line-height: 1.5;">
         {{ item.description }}
       </p>
 
       <!-- Details grid -->
       <div class="flex flex-col gap-2 mb-4 flex-1">
-        <div v-if="item.salary_min || item.salary_max" class="flex items-center gap-2 text-sm">
+        <div v-if="item?.salary_min || item?.salary_max" class="flex items-center gap-2 text-sm">
           <q-icon name="attach_money" size="16px" color="secondary" />
           <span class="font-medium text-primary">
-            {{ formatSalary(item.salary_min, item.salary_max) }}
+            {{ formatSalary(item?.salary_min, item?.salary_max) }}
           </span>
         </div>
 
-        <div v-if="item.schedule" class="flex items-center gap-2 text-sm text-secondary">
+        <div v-if="item?.schedule" class="flex items-center gap-2 text-sm text-secondary">
           <q-icon name="schedule" size="16px" />
           <span>{{ item.schedule }}</span>
         </div>
 
-        <div v-if="item.experience_required && item.experience_required !== 'Не указано'" class="flex items-center gap-2 text-sm text-secondary">
+        <div v-if="item?.experience_required && item.experience_required !== 'Не указано'" class="flex items-center gap-2 text-sm text-secondary">
           <q-icon name="school" size="16px" />
           <span>{{ item.experience_required }}</span>
         </div>
 
-        <div v-if="item.contact_name" class="flex items-center gap-2 text-sm text-secondary">
+        <div v-if="item?.contact_name" class="flex items-center gap-2 text-sm text-secondary">
           <q-icon name="person" size="16px" />
           <span class="truncate">{{ item.contact_name }}</span>
         </div>
@@ -59,15 +59,15 @@
 
       <!-- Footer with contact and action -->
       <div class="border-t border-light pt-3 mt-auto">
-        <div v-if="item.contact_phone" class="flex items-center gap-2 text-sm mb-2">
-          <q-icon name="phone" size="16px" color="primary" />
+        <div v-if="item?.contact_phone" class="flex items-center gap-2 text-sm mb-2">
+          <q-icon name="fas fa-phone" size="16px" color="primary" />
           <a :href="'tel:' + formatPhoneForTel(item.contact_phone)" class="text-primary hover:underline font-medium">
             {{ formatPhone(item.contact_phone) }}
           </a>
         </div>
 
-        <div v-if="item.contact_email" class="flex items-center gap-2 text-sm">
-          <q-icon name="email" size="16px" color="primary" />
+        <div v-if="item?.contact_email" class="flex items-center gap-2 text-sm">
+          <q-icon name="fas fa-envelope" size="16px" color="primary" />
           <a :href="'mailto:' + item.contact_email" class="text-primary hover:underline truncate block">
             {{ item.contact_email }}
           </a>
@@ -75,7 +75,7 @@
 
         <!-- View details button -->
         <q-btn
-          v-if="!item._id && !item.id"
+          v-if="!item?._id && !item?.id"
           block
           flat
           color="primary"
@@ -94,7 +94,8 @@ export default {
   props: {
     item: {
       type: Object,
-      required: true
+      required: true,
+      default: () => ({})
     }
   },
   emits: ['click'],

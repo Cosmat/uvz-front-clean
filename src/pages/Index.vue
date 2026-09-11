@@ -206,6 +206,13 @@ export default {
       await zayavkaStore.fetchZayavki({ ...filters.value, limit, page: 1 })
     }
 
+    // Clear filters
+    async function clearFilters() {
+      filters.value = {}
+      searchQuery.value = ''
+      await zayavkaStore.fetchZayavki({})
+    }
+
     // Initial load
     onBeforeMount(async () => {
       await zayavkaStore.fetchZayavki()
