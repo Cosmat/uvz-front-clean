@@ -16,8 +16,11 @@
           dense
           clearable
           style="width: 250px"
-          prefix="<q-icon name='search' />"
-        />
+        >
+          <template v-slot:prepend>
+            <q-icon name="search" class="text-primary" />
+          </template>
+        </q-input>
       </div>
     </div>
 
@@ -42,31 +45,45 @@
         </template>
 
         <template v-slot:body-cell-phone_number="props">
-                  <div class="row items-center q-gutter-xs">
-                    <div class="col-auto">
-                      <a :href="'tel:' + formatPhoneForTel(props.value)" class="text-primary">
-                        {{ formatPhone(props.value) }}
-                      </a>
-                    </div>
-                    <div class="col-auto">
-                      <q-btn
-                        size="sm"
-                        dense
-                        flat
-                        round
-                        icon="content_copy"
-                        @click="copyPhone(props.value)"
-                        aria-label="Скопировать телефон"
-                      />
-                    </div>
-                  </div>
-                </template>
+          <div class="row items-center q-gutter-xs">
+            <div class="col-auto">
+              <span v-if="props.value" class="text-primary font-weight-medium">
+                <q-icon name="fas fa-phone" class="q-mr-xs" />
+                {{ formatPhone(props.value) }}
+              </span>
+              <span v-else class="text-grey-4">—</span>
+            </div>
+            <div class="col-auto">
+              <q-btn
+                size="sm"
+                dense
+                flat
+                round
+                icon="fas fa-copy"
+                @click="copyPhone(props.value)"
+                aria-label="Скопировать телефон"
+              />
+            </div>
+          </div>
+        </template>
 
         <template v-slot:body-cell-description="props">
           <div v-if="props.value" class="text-caption text-grey-7">{{ props.value }}</div>
           <div v-else class="text-caption text-grey-4">—</div>
         </template>
       </q-table>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="pagination?.pages > 1" class="flex justify-center mt-6">
+      <q-pagination
+        v-model="pagination.page"
+        :max="pagination.pages"
+        :boundary-links="true"
+        :boundary-numbers="true"
+        @input="onPageChange"
+        color="primary"
+      />
     </div>
 
     <!-- Error toast -->
@@ -87,7 +104,6 @@ export default {
     const $q = useQuasar()
     const phoneStore = usePhoneStore()
 
-    // Use storeToRefs for proper reactivity
     const {
       phones,
       loading,
@@ -98,14 +114,21 @@ export default {
     const searchQuery = ref('')
 
     const columns = [
-          { name: 'number_tzeh', label: 'Цех', field: 'number_tzeh', align: 'center', sortable: true },
-          { name: 'phone_number', label: 'Телефон', field: 'phone_number', sortable: false },
-          { name: 'description', label: 'Описание', field: 'description', sortable: false }
-        ]
+      { name: 'number_tzeh', label: 'Цех', field: 'number_tzeh', align: 'center', sortable: true },
+      { name: 'phone_number', label: 'Телефон', field: 'phone_number', sortable: false },
+      { name: 'description', label: 'Описание', field: 'description', sortable: false }
+    ]
 
     const formatPhone = (phone) => {
       if (!phone) return ''
-      return phone.replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3')
+      const cleaned = phone.replace(/\D/g, '')
+      if (cleaned.length === 11 && cleaned[0] === '7') {
+        return `+7 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7, 9)}-${cleaned.slice(9)}`
+      }
+      if (cleaned.length === 10) {
+        return `+7 (${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 8)}-${cleaned.slice(8)}`
+      }
+      return phone
     }
 
     const formatPhoneForTel = (phone) => {
@@ -149,7 +172,8 @@ export default {
       columns,
       formatPhone,
       formatPhoneForTel,
-      copyPhone
+      copyPhone,
+      onPageChange
     }
   }
 }

@@ -1,46 +1,48 @@
 <template>
-  <q-page class="flex flex-center">
-    <!-- Loading skeleton -->
-    <div v-if="loading && (zayavki?.length === 0)" class="full_width" style="height: 100vh">
-      <div class="row q-col-gutter-md q-px-md">
-        <div v-for="i in 6" :key="i" class="col-12 col-md-6 col-lg-4">
-          <q-card class="my-card q-mb-md animate-pulse">
-            <q-card-section>
-              <q-skeleton-tag type="rect" width="60%" height="24px" />
-              <q-skeleton-tag type="rect" width="100%" height="16px" />
-              <q-skeleton-tag type="rect" width="80%" height="16px" />
-              <q-skeleton-tag type="rect" width="100%" height="16px" />
-            </q-card-section>
-          </q-card>
-        </div>
+  <q-page class="q-pa-md" style="max-width: 1400px; margin: 0 auto;">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 animate-slide-up">
+      <div>
+        <h1 class="text-3xl font-bold text-primary" style="line-height: var(--leading-tight);">
+          Вакансии УВЗ
+        </h1>
+        <p class="text-secondary mt-1">
+          Найдено: <span class="font-semibold text-primary">{{ pagination?.total || 0 }}</span>
+          | Активных: <span class="font-semibold text-secondary">{{ activeCount }}</span>
+        </p>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+        <q-input
+          v-model="searchQuery"
+          @update:model-value="debouncedSearch"
+          placeholder="Поиск по профессии, цеху, описанию..."
+          dense
+          clearable
+          style="width: 100%; max-width: 400px;"
+        >
+          <template v-slot:prepend>
+            <q-icon name="search" color="text-tertiary" />
+          </template>
+        </q-input>
+        <q-btn
+          :label="showFilters ? 'Скрыть фильтры' : 'Показать фильтры'"
+          @click="showFilters = !showFilters"
+          outline
+          class="whitespace-nowrap"
+        />
       </div>
     </div>
 
-    <div v-else class="q-pa-md full-width" style="max-width: 1400px; margin: 0 auto;">
-      <!-- Header with stats and search -->
-      <div class="row q-mb-md items-center">
-        <div class="col-auto">
-          <h4 class="text-h6 q-mb-none">Вакансии УВЗ</h4>
-          <div class="text-caption text-grey-7">
-            Найдено: {{ pagination?.total || 0 }} | Активных: {{ activeCount }}
-          </div>
-        </div>
-        <q-space />
-        <div class="col-auto">
-          <q-input
-            v-model="searchQuery"
-            @update:model-value="debouncedSearch"
-            placeholder="Поиск по профессии, цеху, описанию..."
-            dense
-            clearable
-            style="width: 300px"
-            prefix="<q-icon name='search' />"
-          />
-        </div>
-      </div>
-
-      <!-- Filters row -->
-      <div class="row q-col-gutter-sm q-mb-md" v-if="showFilters">
+    <!-- Filters Panel -->
+    <q-expansion-item
+      v-model="showFilters"
+      :label="showFilters ? 'Фильтры' : 'Фильтры'"
+      :icon="showFilters ? 'expand_less' : 'expand_more'"
+      class="mb-6 animate-slide-down"
+      dense
+    >
+      <div class="row q-col-gutter-md q-mt-md" style="max-width: 100%;">
         <div class="col-12 col-md-4">
           <q-select
             v-model="filters.tzeh"
@@ -52,6 +54,7 @@
             option-value="value"
             option-label="label"
             clearable
+            style="width: 100%"
           />
         </div>
         <div class="col-12 col-md-4">
@@ -65,6 +68,7 @@
             option-value="value"
             option-label="label"
             clearable
+            style="width: 100%"
           />
         </div>
         <div class="col-12 col-md-4">
@@ -78,100 +82,79 @@
             option-value="value"
             option-label="label"
             clearable
+            style="width: 100%"
           />
         </div>
       </div>
+    </q-expansion-item>
 
-      <div class="row q-mb-md">
-        <div class="col-auto">
-          <q-btn
-            :label="showFilters ? 'Скрыть фильтры' : 'Показать фильтры'"
-            @click="showFilters = !showFilters"
-            outline
-            size="sm"
-          />
-        </div>
-        <q-space />
-        <div class="col-auto">
-          <q-select
-            v-model="pagination.limit"
-            :options="[10, 20, 50, 100]"
-            label="На странице"
-            dense
-            style="width: 140px"
-            @update:model-value="onLimitChange"
-          />
+    <!-- Loading Skeleton -->
+    <div v-if="loading && (zayavki?.length === 0)" class="animate-fade-in">
+      <div class="row q-col-gutter-md">
+        <div v-for="i in 6" :key="i" class="col-12 col-md-6 col-lg-4">
+          <div class="card p-5 skeleton-card animate-pulse" />
         </div>
       </div>
+    </div>
 
-      <!-- Simple list instead of virtual scroll for stability -->
-      <div class="row q-col-gutter-md" style="min-height: 400px;">
-        <div v-for="item in zayavki" :key="getItemKey(item)" class="col-12 col-md-6 col-lg-4">
-          <q-card class="my-card q-mb-md">
-            <q-card-section>
-              <ZayavkaCard
-                :tzeh="item.tzeh"
-                :professia="item.professia"
-                :description="item.description"
-                :date="item.date"
-                :id="item._id || item.id"
-                :requirements="item.requirements"
-                :salary_min="item.salary_min"
-                :salary_max="item.salary_max"
-                :schedule="item.schedule"
-                :experience_required="item.experience_required"
-                :contact_name="item.contact_name"
-                :contact_phone="item.contact_phone"
-                :contact_email="item.contact_email"
-                :status="item.status"
-              />
-            </q-card-section>
-          </q-card>
-        </div>
+    <!-- Vacancies Grid -->
+    <div v-else-if="zayavki && zayavki.length > 0" class="animate-slide-up">
+      <div class="row q-col-gutter-md">
+        <VacancyCard
+          v-for="item in zayavki"
+          :key="item._id || item.id"
+          :item="item"
+          class="col-12 col-md-6 col-lg-4"
+        />
       </div>
 
       <!-- Pagination -->
-      <div v-if="pagination?.pages > 1" class="row q-mt-md justify-center">
+      <div v-if="pagination?.pages > 1" class="flex justify-center mt-8 animate-fade-in">
         <q-pagination
           v-model="pagination.page"
           :max="pagination.pages"
           :boundary-links="true"
           :boundary-numbers="true"
           @input="onPageChange"
+          color="primary"
+          class="w-auto"
         />
-      </div>
-
-      <!-- Empty state -->
-      <div v-if="!loading && (!zayavki || zayavki.length === 0)" class="text-center q-pa-xl">
-        <q-icon name="work_off" size="64px" class="text-grey-4" />
-        <div class="text-h6 q-mt-md">Вакансии не найдены</div>
-        <div class="text-grey-7 q-mt-sm">
-          Попробуйте изменить фильтры или поиск
-        </div>
       </div>
     </div>
 
+    <!-- Empty State -->
+    <div v-else class="empty-state animate-fade-in">
+      <q-icon name="work_off" size="80px" class="empty-state-icon" />
+      <h3 class="empty-state-title">Вакансии не найдены</h3>
+      <p class="empty-state-text">Попробуйте изменить фильтры или поиск</p>
+      <q-btn
+        color="primary"
+        label="Сбросить фильтры"
+        @click="clearFilters"
+        class="mt-4"
+      />
+    </div>
+
     <!-- Error toast -->
-    <q-toast v-if="error" :message="error" color="negative" position="top" />
+    <q-toast v-if="error" :message="error" color="negative" position="top" class="toast-modern" />
   </q-page>
 </template>
 
 <script>
 import { ref, computed, watch, onBeforeMount } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useQuasar } from 'quasar'
 import { useZayavkaStore } from 'stores/zayavka'
-import ZayavkaCard from 'components/ui/Zayavka.vue'
+import { useQuasar } from 'quasar'
 import { debounce } from 'quasar'
+import VacancyCard from 'components/ui/VacancyCard.vue'
 
 export default {
   name: 'PageIndex',
-  components: { ZayavkaCard },
+  components: { VacancyCard },
   setup() {
     const $q = useQuasar()
     const zayavkaStore = useZayavkaStore()
 
-    // Use storeToRefs for proper reactivity
     const {
       zayavki,
       loading,
@@ -183,11 +166,9 @@ export default {
       activeZayavki
     } = storeToRefs(zayavkaStore)
 
-    // Local state
     const searchQuery = ref('')
     const showFilters = ref(false)
 
-    // Computed with defensive checks
     const activeCount = computed(() => (activeZayavki.value || []).length)
 
     const scheduleOptions = [
@@ -257,7 +238,8 @@ export default {
       getItemKey,
       // Methods
       onPageChange,
-      onLimitChange
+      onLimitChange,
+      clearFilters
     }
   }
 }

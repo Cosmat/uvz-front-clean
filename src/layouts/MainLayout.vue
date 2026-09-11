@@ -17,28 +17,28 @@
             <q-list class="rounded-borders text-primary text-weight-bolder">
               <q-item clickable v-ripple to="/">
                 <q-item-section avatar>
-                  <q-icon class="text-red" name="home" />
+                  <q-icon class="text-red" name="fas fa-home" />
                 </q-item-section>
                 <q-item-section>НА ГЛАВНУЮ</q-item-section>
               </q-item>
               <q-separator spaced />
               <q-item clickable v-ripple to="/deshife">
                 <q-item-section avatar>
-                  <q-icon class="text-red" name="font_download" />
+                  <q-icon class="text-red" name="fas fa-font" />
                 </q-item-section>
                 <q-item-section>ДЕШИФРАТОР</q-item-section>
               </q-item>
               <q-separator spaced />
               <q-item clickable v-ripple to="/phones">
                 <q-item-section avatar>
-                  <q-icon class="text-red" name="phone" />
+                  <q-icon class="text-red" name="fas fa-phone" />
                 </q-item-section>
                 <q-item-section>ТЕЛЕФОНЫ ТАБЕЛЬНЫХ</q-item-section>
               </q-item>
               <q-separator spaced />
               <q-item clickable v-ripple to="/ai-assistant">
                 <q-item-section avatar>
-                  <q-icon class="text-red" name="smart_toy" />
+                  <q-icon class="text-red" name="fas fa-robot" />
                 </q-item-section>
                 <q-item-section>AI-ПОМОЩНИК</q-item-section>
               </q-item>
@@ -52,9 +52,9 @@
           {{ userName }}
           <q-tooltip class="bg-purple" v-model="showing">Создать вакансию</q-tooltip>
         </q-btn>
-        <q-btn v-if="!isAuthenticated" icon="login" dense color="primary" label="Вход" class="q-mr-lg" to="/login" unelevated rounded> </q-btn>
-        <q-btn v-if="isAuthenticated" icon="logout" dense color="primary" label="Выход" class="q-mr-lg" @click="logout" unelevated rounded />
-        <q-btn v-if="!isAuthenticated" icon="app_registration" dense color="primary" label="Регистрация" to="/registr" unelevated rounded>
+        <q-btn v-if="!isAuthenticated" icon="fas fa-sign-in-alt" dense color="primary" label="Вход" class="q-mr-lg" to="/login" unelevated rounded> </q-btn>
+        <q-btn v-if="isAuthenticated" icon="fas fa-sign-out-alt" dense color="primary" label="Выход" class="q-mr-lg" @click="logout" unelevated rounded />
+        <q-btn v-if="!isAuthenticated" icon="fas fa-user-plus" dense color="primary" label="Регистрация" to="/registr" unelevated rounded>
           <q-tooltip class="bg-purple" v-model="showing">Чтобы создать вакансию пожалуйста зарегистрируйтесь</q-tooltip>
         </q-btn>
       </q-toolbar>
