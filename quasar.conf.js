@@ -47,6 +47,18 @@ module.exports = configure(function (ctx) {
         }
       },
 
+      // Bundle analyzer for prod builds
+      ...(ctx.prod && {
+        chainWebpack(chain) {
+          chain.plugin('bundle-analyzer')
+            .use(require('webpack-bundle-analyzer').BundleAnalyzerPlugin, [{
+              analyzerMode: 'static',
+              reportFilename: 'bundle-report.html',
+              openAnalyzer: false
+            }])
+        }
+      }),
+
       chainWebpack(chain) {
         chain.resolve.alias.set("@", path.resolve(__dirname, "src"))
         chain.plugin("provide").use(require("webpack").ProvidePlugin, [{
@@ -72,6 +84,12 @@ module.exports = configure(function (ctx) {
             pinia: {
               test: /[\\/]node_modules[\\/](pinia|vue-router)[\\/]/,
               name: "pinia-router",
+              chunks: "all",
+              priority: 15
+            },
+            fontawesome: {
+              test: /[\\/]node_modules[\\/]@fortawesome[\\/]/,
+              name: "fontawesome",
               chunks: "all",
               priority: 15
             },
@@ -130,13 +148,17 @@ module.exports = configure(function (ctx) {
 
     ssr: {
       pwa: false,
+
       prodPort: 3000,
+
       maxAge: 1000 * 60 * 60 * 24 * 30,
+
       chainWebpackWebserver() {},
+
       middlewares: [
         ctx.prod ? "compression" : "",
         "render"
-      ]
+      ],
     },
 
     pwa: {
@@ -184,22 +206,24 @@ module.exports = configure(function (ctx) {
             }
           }
         ],
-        manifest: {
-          name: "УВЗ — Биржа труда",
-          short_name: "УВЗ Работа",
-          description: "Биржа труда Уралвагонзавод — вакансии, дешифратор, телефоны цехов",
-          display: "standalone",
-          orientation: "portrait",
-          background_color: "#F5F5F5",
-          theme_color: "#1976D2",
-          icons: [
-            { src: "icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
-            { src: "icons/icon-192x192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
-            { src: "icons/icon-256x256.png", sizes: "256x256", type: "image/png" },
-            { src: "icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
-            { src: "icons/icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
-          ]
-        }
+        navigationPreload: true,
+        offlineGoogleAnalytics: true
+      },
+      manifest: {
+        name: "УВЗ — Биржа труда",
+        short_name: "УВЗ Работа",
+        description: "Биржа труда Уралвагонзавод — вакансии, дешифратор, телефоны цехов",
+        display: "standalone",
+        orientation: "portrait",
+        background_color: "#F5F5F5",
+        theme_color: "#1976D2",
+        icons: [
+          { src: "icons/icon-128x128.png", sizes: "128x128", type: "image/png" },
+          { src: "icons/icon-192x192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+          { src: "icons/icon-256x256.png", sizes: "256x256", type: "image/png" },
+          { src: "icons/icon-384x384.png", sizes: "384x384", type: "image/png" },
+          { src: "icons/icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
+        ]
       }
     },
 
