@@ -12,11 +12,13 @@
 
 import lang from 'quasar/lang/ru'
 
-
-
-import {Meta,Notify} from 'quasar'
+import iconSet from 'quasar/icon-set/fontawesome-v6'
 
 
 
-export default { config: {"brand":{}},lang,plugins: {Meta,Notify} }
+import {Meta,Notify,Loading,Dialog} from 'quasar'
+
+
+
+export default { config: {"brand":{"primary":"#1976D2","secondary":"#424242","accent":"#82B1FF","dark":"#1E1E1E","positive":"#4CAF50","negative":"#F44336","info":"#2196F3","warning":"#FFC107"},"notify":{"position":"top","timeout":3000,"textColor":"white","actions":[{"icon":"close","color":"white"}]},"loading":{"color":"primary","size":"2rem"}},lang,iconSet,plugins: {Meta,Notify,Loading,Dialog} }
 
