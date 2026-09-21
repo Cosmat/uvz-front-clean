@@ -1,94 +1,49 @@
 <template>
-  <q-card class="card card-interactive h-full flex flex-col" @click="$emit('click', item)">
-    <q-card-section class="p-5 flex flex-col h-full">
-      <!-- Header with status and tzeh -->
-      <div class="flex items-start justify-between gap-2 mb-3">
-        <div class="flex items-center gap-2 flex-1 min-w-0">
-          <q-badge
-            :label="item?.tzeh || '—'"
-            color="primary"
-            class="text-xs font-medium flex-shrink-0"
-            style="min-width: 50px;"
-          />
-          <span class="text-xs text-tertiary font-medium truncate block">
-            Цех {{ item?.tzeh || '—' }}
-          </span>
-        </div>
-        <q-badge
-          :label="item?.status || 'Активная'"
-          :color="getStatusColor(item?.status)"
-          size="sm"
-          class="flex-shrink-0"
-        />
-      </div>
+  <q-card class="vacancy-card" @click="$emit('click', item)">
+    <!-- Badges row -->
+    <div class="card-top">
+      <span class="tzeh-badge">Цех {{ item?.tzeh || '—' }}</span>
+      <span class="status-badge" :class="'status-' + statusKey">{{ item?.status || 'Активная' }}</span>
+    </div>
 
-      <!-- Profession title -->
-      <h3 class="text-lg font-semibold text-primary mb-2 line-clamp-2" style="line-height: 1.3;">
-        {{ item?.professia || '—' }}
-      </h3>
+    <!-- Title -->
+    <h3 class="card-title">{{ item?.professia || 'Вакансия' }}</h3>
 
-      <!-- Description -->
-      <p v-if="item?.description" class="text-secondary text-sm mb-3 line-clamp-3" style="line-height: 1.5;">
-        {{ item.description }}
-      </p>
+    <!-- Salary -->
+    <div v-if="item?.salary_min || item?.salary_max" class="salary">
+      {{ formatSalary(item?.salary_min, item?.salary_max) }}
+    </div>
+    <div v-else class="salary salary-muted">Зарплата по договорённости</div>
 
-      <!-- Details grid -->
-      <div class="flex flex-col gap-2 mb-4 flex-1">
-        <div v-if="item?.salary_min || item?.salary_max" class="flex items-center gap-2 text-sm">
-          <q-icon name="attach_money" size="16px" color="secondary" />
-          <span class="font-medium text-primary">
-            {{ formatSalary(item?.salary_min, item?.salary_max) }}
-          </span>
-        </div>
+    <!-- Description -->
+    <p v-if="item?.description" class="card-desc">{{ item.description }}</p>
 
-        <div v-if="item?.schedule" class="flex items-center gap-2 text-sm text-secondary">
-          <q-icon name="schedule" size="16px" />
-          <span>{{ item.schedule }}</span>
-        </div>
+    <!-- Meta -->
+    <div class="card-meta">
+      <span v-if="item?.schedule" class="meta-item">
+        <i class="fas fa-clock"></i>{{ item.schedule }}
+      </span>
+      <span v-if="item?.experience_required && item.experience_required !== 'Не указано'" class="meta-item">
+        <i class="fas fa-graduation-cap"></i>{{ item.experience_required }}
+      </span>
+      <span v-if="item?.contact_name" class="meta-item">
+        <i class="fas fa-user"></i>{{ item.contact_name }}
+      </span>
+    </div>
 
-        <div v-if="item?.experience_required && item.experience_required !== 'Не указано'" class="flex items-center gap-2 text-sm text-secondary">
-          <q-icon name="school" size="16px" />
-          <span>{{ item.experience_required }}</span>
-        </div>
-
-        <div v-if="item?.contact_name" class="flex items-center gap-2 text-sm text-secondary">
-          <q-icon name="person" size="16px" />
-          <span class="truncate">{{ item.contact_name }}</span>
-        </div>
-      </div>
-
-      <!-- Footer with contact and action -->
-      <div class="border-t border-light pt-3 mt-auto">
-        <div v-if="item?.contact_phone" class="flex items-center gap-2 text-sm mb-2">
-          <q-icon name="fas fa-phone" size="16px" color="primary" />
-          <a :href="'tel:' + formatPhoneForTel(item.contact_phone)" class="text-primary hover:underline font-medium">
-            {{ formatPhone(item.contact_phone) }}
-          </a>
-        </div>
-
-        <div v-if="item?.contact_email" class="flex items-center gap-2 text-sm">
-          <q-icon name="fas fa-envelope" size="16px" color="primary" />
-          <a :href="'mailto:' + item.contact_email" class="text-primary hover:underline truncate block">
-            {{ item.contact_email }}
-          </a>
-        </div>
-
-        <!-- View details button -->
-        <q-btn
-          v-if="!item?._id && !item?.id"
-          block
-          flat
-          color="primary"
-          label="Подробнее"
-          icon="arrow_forward"
-          class="mt-3"
-        />
-      </div>
-    </q-card-section>
+    <!-- Footer -->
+    <div class="card-footer">
+      <a v-if="item?.contact_phone" :href="'tel:' + formatPhoneForTel(item.contact_phone)" class="phone-link">
+        <i class="fas fa-phone"></i>{{ formatPhone(item.contact_phone) }}
+      </a>
+      <span v-if="item?.date" class="post-date">{{ item.date }}</span>
+    </div>
   </q-card>
 </template>
 
 <script>
+import { computed } from 'vue'
+
 export default {
   name: 'VacancyCard',
   props: {
@@ -99,18 +54,21 @@ export default {
     }
   },
   emits: ['click'],
-  setup(props, { emit }) {
+  setup(props) {
+    const ruFmt = new Intl.NumberFormat('ru-RU')
+
+    const statusKey = computed(() => {
+      const s = (props.item?.status || '').toLowerCase()
+      if (s.includes('архив')) return 'archived'
+      if (s.includes('черновик')) return 'draft'
+      return 'active'
+    })
+
     const formatSalary = (min, max) => {
-      if (min && max && min !== max) {
-        return `${min.toLocaleString()} — ${max.toLocaleString()} ₽`
-      }
-      if (min) {
-        return `${min.toLocaleString()} ₽`
-      }
-      if (max) {
-        return `до ${max.toLocaleString()} ₽`
-      }
-      return 'По договорённости'
+      if (min && max && min !== max) return `${ruFmt.format(min)} – ${ruFmt.format(max)} ₽`
+      if (min) return `от ${ruFmt.format(min)} ₽`
+      if (max) return `до ${ruFmt.format(max)} ₽`
+      return ''
     }
 
     const formatPhone = (phone) => {
@@ -118,6 +76,9 @@ export default {
       const cleaned = phone.replace(/\D/g, '')
       if (cleaned.length === 10) {
         return `+7 (${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 8)}-${cleaned.slice(8)}`
+      }
+      if (cleaned.length === 11 && cleaned[0] === '7') {
+        return `+7 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7, 9)}-${cleaned.slice(9)}`
       }
       return phone
     }
@@ -127,68 +88,165 @@ export default {
       return phone.replace(/\D/g, '')
     }
 
-    const getStatusColor = (status) => {
-      switch (status?.toLowerCase()) {
-        case 'активная':
-        case 'active':
-          return 'secondary'
-        case 'архивная':
-        case 'archived':
-          return 'grey'
-        case 'черновик':
-        case 'draft':
-          return 'accent'
-        default:
-          return 'primary'
-      }
-    }
-
     return {
+      statusKey,
       formatSalary,
       formatPhone,
-      formatPhoneForTel,
-      getStatusColor
+      formatPhoneForTel
     }
   }
 }
 </script>
 
 <style scoped>
-/* Ensure card fills grid cell properly */
-.card {
+.vacancy-card {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 18px 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
-.card-interactive {
-  cursor: pointer;
+.vacancy-card:hover {
+  border-color: #c7d7f0;
+  box-shadow: 0 10px 24px rgba(23, 90, 190, 0.10);
+  transform: translateY(-3px);
 }
 
-.card-interactive:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl) !important;
+/* Badges */
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-/* Line clamp utilities */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.tzeh-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: #e8f0fe;
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
 }
 
-.line-clamp-3 {
+.status-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.status-active {
+  color: #15803d;
+  background: #ecfdf5;
+}
+
+.status-archived {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.status-draft {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+/* Title */
+.card-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+/* Salary */
+.salary {
+  font-size: 18px;
+  font-weight: 800;
+  color: #047857;
+  margin-bottom: 4px;
+}
+
+.salary-muted {
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Description */
+.card-desc {
+  margin: 10px 0 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #64748b;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Ensure q-card-section fills available space */
-:deep(.q-card-section) {
-  flex: 1;
+/* Meta */
+.card-meta {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.meta-item {
+  font-size: 12.5px;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-item i {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Footer */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  gap: 8px;
+}
+
+.phone-link {
+  color: #1976d2;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.phone-link:hover {
+  text-decoration: underline;
+}
+
+.phone-link i {
+  font-size: 12px;
+}
+
+.post-date {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
 }
 </style>
