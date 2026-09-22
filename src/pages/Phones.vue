@@ -17,8 +17,8 @@
     <div class="toolbar">
       <q-input
         v-model="searchQuery"
-        @update:model-value="debouncedSearch"
-        placeholder="Поиск по номеру цеха…"
+        @update:model-value="onSearchInput"
+        placeholder="Начните вводить номер цеха…"
         dense
         clearable
         outlined
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else-if="phones && phones.length > 0" class="table-card">
+    <div v-else-if="filteredPhones && filteredPhones.length > 0" class="table-card">
       <table class="phone-table">
         <thead>
           <tr>
@@ -51,7 +51,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="item in phones"
+            v-for="item in filteredPhones"
             :key="item._id || item.number_tzeh"
             class="phone-row"
           >
@@ -91,31 +91,14 @@
       <p>Попробуйте изменить поисковый запрос</p>
       <q-btn unelevated rounded color="primary" label="Сбросить" @click="clearSearch" />
     </div>
-
-    <!-- Pagination -->
-    <div v-if="pagination?.pages > 1 && !loading" class="pagination-wrap">
-      <q-pagination
-        v-model="pagination.page"
-        :max="pagination.pages"
-        :boundary-links="true"
-        :boundary-numbers="true"
-        @input="onPageChange"
-        color="primary"
-        rounded
-      />
-    </div>
-
-    <!-- Error toast -->
-    <q-toast v-if="error" :message="error" color="negative" position="top" />
   </q-page>
 </template>
 
 <script>
-import { ref, watch, onBeforeMount } from 'vue'
+import { ref, computed, watch, onBeforeMount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePhoneStore } from 'stores/phone'
 import { useQuasar } from 'quasar'
-import { debounce } from 'quasar'
 
 export default {
   name: 'PagePhones',
@@ -132,14 +115,28 @@ export default {
 
     const searchQuery = ref('')
 
+    // Instant client-side filter: only tzeh numbers matching typed digits
+    const filteredPhones = computed(() => {
+      const list = phones.value || []
+      const q = (searchQuery.value || '').trim()
+      if (!q) return list
+      return list.filter(p =>
+        String(p.number_tzeh || '').toLowerCase().includes(q.toLowerCase())
+      )
+    })
+
+    function onSearchInput() {
+      // reactively updates filteredPhones via computed; pagination not needed for 25 rows
+    }
+
     const formatPhone = (phone) => {
       if (!phone) return ''
       const cleaned = phone.replace(/\D/g, '')
       if (cleaned.length === 11 && cleaned[0] === '7') {
         return `+7 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7, 9)}-${cleaned.slice(9)}`
       }
-      if (cleaned.length === 10) {
-        return `+7 (${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 8)}-${cleaned.slice(8)}`
+      if (cleaned.length === 5 && cleaned.includes('-')) {
+        return cleaned
       }
       return phone
     }
@@ -161,21 +158,6 @@ export default {
 
     async function clearSearch() {
       searchQuery.value = ''
-      await phoneStore.fetchPhones({ page: 1 })
-    }
-
-    const debouncedSearch = debounce(async (value) => {
-      await phoneStore.fetchPhones({
-        search: value || undefined,
-        page: 1
-      })
-    }, 300)
-
-    async function onPageChange(page) {
-      await phoneStore.fetchPhones({
-        search: searchQuery.value || undefined,
-        page
-      })
     }
 
     onBeforeMount(async () => {
@@ -190,6 +172,7 @@ export default {
 
     return {
       phones,
+      filteredPhones,
       loading,
       error,
       pagination,
@@ -197,8 +180,7 @@ export default {
       formatPhone,
       formatPhoneForTel,
       copyPhone,
-      clearSearch,
-      onPageChange
+      clearSearch
     }
   }
 }

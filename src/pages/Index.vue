@@ -18,7 +18,7 @@
       <q-input
         v-model="searchQuery"
         @update:model-value="debouncedSearch"
-        placeholder="Профессия, цех или ключевое слово…"
+        placeholder="Начните вводить профессию…"
         dense
         clearable
         outlined
@@ -164,7 +164,7 @@ export default {
 
     const hasActiveFilters = computed(() => {
       const f = filters.value || {}
-      return !!(f.tzeh || f.schedule || f.experience_required || f.search)
+      return !!(f.tzeh || f.schedule || f.experience_required || f.professia)
     })
 
     const scheduleOptions = [
@@ -184,11 +184,14 @@ export default {
     ]
 
     const debouncedSearch = debounce(async (value) => {
-      await zayavkaStore.setFilters({
-        search: value || undefined,
+      // Search matches ONLY profession name, reactively as user types
+      filters.value = {
+        ...filters.value,
+        professia: value || undefined,
         page: 1
-      })
-    }, 300)
+      }
+      await zayavkaStore.fetchZayavki(filters.value)
+    }, 200)
 
     async function onFilterChange() {
       await zayavkaStore.fetchZayavki({ ...filters.value, page: 1 })
@@ -203,7 +206,6 @@ export default {
       searchQuery.value = ''
       await zayavkaStore.fetchZayavki({})
     }
-
     onBeforeMount(async () => {
       await zayavkaStore.fetchZayavki()
       await zayavkaStore.fetchStats()
