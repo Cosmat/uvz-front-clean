@@ -33,16 +33,40 @@ export const useZayavkaStore = defineStore('zayavka', () => {
     loading.value = true
     error.value = null
     Object.assign(filters.value, newFilters)
+
+    // Instant display: show cached data from previous session while refreshing
+    const cacheKey = 'uvz_zayavki_cache'
+    const isInitialLoad = zayavki.value.length === 0 && !newFilters.page && !newFilters.professia
+    if (isInitialLoad) {
+      try {
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null')
+        if (cached && cached.data?.length > 0 && Date.now() - cached.ts < 10 * 60 * 1000) {
+          zayavki.value = cached.data
+          pagination.value = cached.pagination || pagination.value
+          loading.value = false // don't block UI with skeleton, refresh silently
+        }
+      } catch (e) { /* ignore cache errors */ }
+    }
+
     try {
       const response = await apiService.getZayavki(filters.value)
       const data = response?.data || []
       const pag = response?.pagination || { page: 1, limit: 20, total: 0, pages: 0, hasNext: false, hasPrev: false }
       zayavki.value = data
       pagination.value = pag
+      // Save to localStorage for instant next load
+      if (!newFilters.professia && !newFilters.tzeh && !newFilters.schedule && !newFilters.experience_required) {
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({ data, pagination: pag, ts: Date.now() }))
+        } catch (e) { /* quota exceeded - ignore */ }
+      }
     } catch (e) {
-      error.value = e.message || 'Failed to fetch vacancies'
-      console.error('fetchZayavki error:', e)
-      zayavki.value = []
+      // Only show error if we have nothing to display
+      if (zayavki.value.length === 0) {
+        error.value = e.message || 'Failed to fetch vacancies'
+        console.error('fetchZayavki error:', e)
+      }
+      zayavki.value = zayavki.value.length > 0 ? zayavki.value : []
     } finally {
       loading.value = false
     }
