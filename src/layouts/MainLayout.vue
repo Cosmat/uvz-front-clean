@@ -41,12 +41,12 @@
         </q-btn>
         <q-btn
           v-if="!isAuthenticated"
-          outline
+          unelevated
           no-caps
           rounded
           label="Вход"
           to="/login"
-          class="auth-btn"
+          class="auth-btn auth-btn-outline"
         />
         <q-btn
           v-if="isAuthenticated"
@@ -222,6 +222,8 @@ export default defineComponent({
   font-size: 13.5px;
   font-weight: 600;
   padding: 6px 16px;
+  position: relative;
+  z-index: 2;
 }
 
 .auth-btn-solid {
@@ -231,6 +233,17 @@ export default defineComponent({
 
 .auth-btn-solid:hover {
   background: #1d4ed8;
+}
+
+.auth-btn-outline {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.auth-btn-outline:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .auth-btn-ghost {

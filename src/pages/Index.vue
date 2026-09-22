@@ -35,12 +35,9 @@
         label="Цех"
         dense
         outlined
-        emit-value
-        map-options
-        option-value="value"
-        option-label="label"
         clearable
         class="toolbar-select"
+        @update:model-value="onFilterChange"
       />
 
       <q-select
@@ -55,6 +52,7 @@
         option-label="label"
         clearable
         class="toolbar-select"
+        @update:model-value="onFilterChange"
       />
 
       <q-select
@@ -69,6 +67,7 @@
         option-label="label"
         clearable
         class="toolbar-select"
+        @update:model-value="onFilterChange"
       />
 
       <q-btn
@@ -191,6 +190,10 @@ export default {
       })
     }, 300)
 
+    async function onFilterChange() {
+      await zayavkaStore.fetchZayavki({ ...filters.value, page: 1 })
+    }
+
     async function onPageChange(page) {
       await zayavkaStore.fetchZayavki({ ...filters.value, page })
     }
@@ -226,6 +229,7 @@ export default {
       hasActiveFilters,
       scheduleOptions,
       experienceOptions,
+      onFilterChange,
       onPageChange,
       clearFilters
     }
