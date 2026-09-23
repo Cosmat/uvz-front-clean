@@ -1,7 +1,2 @@
-# SPA fallback for Vue Router, BUT never serve HTML for missing assets
-# (stale cached app.js referencing removed chunks must fail visibly, not return HTML as JS)
-
-/assets/*  /404-asset.txt  404
-
-# Vue Router history mode fallback
+# Vue Router history mode fallback (single-page app)
 /*  /index.html  200

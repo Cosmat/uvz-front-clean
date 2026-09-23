@@ -1,7 +1,3 @@
-/*
-  Cache rules for Cloudflare Pages.
-  index.html must never be cached by the browser/edge so users always get fresh chunk references.
-  Hashed assets are immutable.
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
 
