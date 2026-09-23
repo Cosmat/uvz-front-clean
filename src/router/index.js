@@ -7,6 +7,7 @@ import {
   createWebHashHistory,
 } from "vue-router";
 import routes from "./routes";
+import { useAuthStore } from "stores/auth";
 
 /*
  * If not building with SSR mode, you can
@@ -17,7 +18,7 @@ import routes from "./routes";
  * with the Router instance.
  */
 
-export default route(function ({ store } /* {, ssrContext } */) {
+export default route(function (/* {, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === "history"
@@ -37,11 +38,37 @@ export default route(function ({ store } /* {, ssrContext } */) {
   });
   Router.beforeEach((to, from, next) => {
     const requireAuth = to.meta.auth;
-    if (requireAuth && store.getters["auth/isAuthenticated"]) {
-      next();
-    } else if (requireAuth && !store.getters["auth/isAuthenticated"]) {
+    let isAuth = false;
+    try {
+      isAuth = !!useAuthStore().isAuthenticated;
+    } catch (e) {
+      // Pinia not ready yet for some reason — fall back to the stored token
+      isAuth = !!localStorage.getItem("token");
+    }
+    if (requireAuth && !isAuth) {
       next("/login?message=auth");
-    } else next();
+    } else {
+      next();
+    }
   });
+
+  // If the browser still holds an old app.js, it may request chunk files that
+  // no longer exist on the server (the SPA fallback then returns HTML, the
+  // script fails to parse, and the page goes blank). Reload once to pick up
+  // the fresh deployment instead of showing an empty screen.
+  Router.onError((error) => {
+    const msg = String((error && error.message) || "");
+    const chunkFailed = /Loading chunk|Loading CSS chunk|Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(
+      msg
+    );
+    if (!chunkFailed) return;
+    const KEY = "chunk-reload-at";
+    const last = Number(sessionStorage.getItem(KEY) || 0);
+    if (Date.now() - last > 10000) {
+      sessionStorage.setItem(KEY, String(Date.now()));
+      window.location.reload();
+    }
+  });
+
   return Router;
 });
