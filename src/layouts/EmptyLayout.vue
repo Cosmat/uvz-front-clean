@@ -1,25 +1,14 @@
 <template>
-  <div>
-    <AppMessage class="pos_abs" />
-    <div>
-      <router-view></router-view>
-    </div>
+  <div class="empty-layout">
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
-import AppMessage from "../components/ui/AppMessage";
-
+// No Vuex here: the app runs on Pinia. Rendering a Vuex-dependent component
+// (useStore() with no installed Vuex store) crashed the whole layout,
+// leaving login/register/profile pages as a blank screen.
 export default {
-  components: { AppMessage },
-  setup() {
-    return {};
-  },
+  name: "EmptyLayout",
 };
 </script>
-
-<style scoped>
-.pos_abs {
-  position: absolute;
-}
-</style>

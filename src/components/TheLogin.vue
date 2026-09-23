@@ -1,5 +1,5 @@
 <template>
-  <q-page class="auth-page">
+  <div class="auth-page">
     <div class="auth-card">
       <!-- Header -->
       <div class="auth-head">
@@ -11,7 +11,7 @@
       </div>
 
       <!-- Form -->
-      <q-form @submit="onSubmit" class="auth-form">
+      <q-form @submit.prevent="onSubmit" class="auth-form">
         <q-input
           outlined
           v-model="name"
@@ -58,7 +58,7 @@
         <router-link to="/" class="footer-link muted">← На главную</router-link>
       </div>
     </div>
-  </q-page>
+  </div>
 </template>
 
 <script>

@@ -231,6 +231,7 @@ export default {
       hasActiveFilters,
       scheduleOptions,
       experienceOptions,
+      debouncedSearch,
       onFilterChange,
       onPageChange,
       clearFilters
