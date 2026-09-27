@@ -12,7 +12,19 @@ const getBaseUrl = () => {
 
 const getApi = () => {
   // Always create fresh instance with current config
-  return axios.create({ baseURL: getBaseUrl() })
+  const instance = axios.create({ baseURL: getBaseUrl() })
+
+  // Attach auth token (if logged in) to every request.
+  // Without this, /api/zayavki/my, PATCH/DELETE etc. always got 401.
+  instance.interceptors.request.use(config => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  })
+
+  return instance
 }
 
 // Export a proxy object that delegates to a fresh lazy instance

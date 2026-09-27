@@ -77,6 +77,10 @@
           <q-item-section avatar><i class="fas fa-briefcase"></i></q-item-section>
           <q-item-section>Вакансии</q-item-section>
         </q-item>
+        <q-item clickable v-ripple to="/create" @click="drawer = false">
+          <q-item-section avatar><i class="fas fa-plus-circle"></i></q-item-section>
+          <q-item-section>Разместить вакансию</q-item-section>
+        </q-item>
         <q-item clickable v-ripple to="/deshife" @click="drawer = false">
           <q-item-section avatar><i class="fas fa-font"></i></q-item-section>
           <q-item-section>Дешифратор кодов</q-item-section>

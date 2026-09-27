@@ -79,6 +79,16 @@
         class="toolbar-reset"
         @click="clearFilters"
       />
+
+      <q-btn
+        unelevated
+        rounded
+        dense
+        label="Разместить вакансию"
+        icon="add_circle"
+        class="toolbar-create"
+        to="/create"
+      />
     </div>
 
     <!-- Result summary -->
@@ -316,6 +326,13 @@ export default {
 .toolbar-reset {
   color: #64748b;
   white-space: nowrap;
+}
+
+.toolbar-create {
+  background: #2563eb;
+  color: #ffffff;
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 /* Result line */

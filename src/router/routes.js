@@ -56,6 +56,15 @@ const routes = [
     },
   },
   {
+    path: "/create",
+    component: () => import("layouts/MainLayout.vue"),
+    children: [{ path: "", component: () => import("pages/CreateZayavka.vue") }],
+    meta: {
+      auth: false,
+    },
+  },
+
+  {
     path: "/phones",
     component: () => import("layouts/MainLayout.vue"),
     children: [{ path: "", component: () => import("pages/Phones.vue") }],
