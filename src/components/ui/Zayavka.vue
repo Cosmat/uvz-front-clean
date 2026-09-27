@@ -87,13 +87,6 @@
         <span class="q-ml-lg q-mt-sm q-mb-xs text-caption text-grey-7">
           Создана: {{ formatDate(date) }}
         </span>
-        <q-space />
-        <q-chip
-          :color="getStatusColor(status)"
-          :label="status"
-          size="sm"
-          class="q-mr-lg q-mb-sm"
-        />
       </q-card-section>
     </q-card>
   </div>

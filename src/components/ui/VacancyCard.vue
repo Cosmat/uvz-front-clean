@@ -3,7 +3,6 @@
     <!-- Badges row -->
     <div class="card-top">
       <span class="tzeh-badge">Цех {{ item?.tzeh || '—' }}</span>
-      <span class="status-badge" :class="'status-' + statusKey">{{ item?.status || 'Активная' }}</span>
     </div>
 
     <!-- Title -->
@@ -57,13 +56,6 @@ export default {
   setup(props) {
     const ruFmt = new Intl.NumberFormat('ru-RU')
 
-    const statusKey = computed(() => {
-      const s = (props.item?.status || '').toLowerCase()
-      if (s.includes('архив')) return 'archived'
-      if (s.includes('черновик')) return 'draft'
-      return 'active'
-    })
-
     const formatSalary = (min, max) => {
       if (min && max && min !== max) return `${ruFmt.format(min)} – ${ruFmt.format(max)} ₽`
       if (min) return `от ${ruFmt.format(min)} ₽`
@@ -89,7 +81,6 @@ export default {
     }
 
     return {
-      statusKey,
       formatSalary,
       formatPhone,
       formatPhoneForTel
