@@ -114,6 +114,30 @@
     <q-page-container class="page-container">
       <router-view />
     </q-page-container>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-col footer-brand">
+          <i class="fas fa-industry footer-icon"></i>
+          <span class="footer-name">Работа<span class="brand-accent">УВЗ</span></span>
+          <div class="footer-tag">Неофициальная витрина вакансий Уралвагонзавода</div>
+        </div>
+        <div class="footer-col">
+          <div class="footer-title">Отдел кадров УВЗ</div>
+          <a class="footer-link" href="tel:+73435380000"><i class="fas fa-phone"></i> 8 (3435) 380-300</a>
+          <a class="footer-link" href="mailto:hr@npk.uvz.ru"><i class="fas fa-envelope"></i> hr@npk.uvz.ru</a>
+          <div class="footer-text"><i class="fas fa-location-dot"></i> г. Нижний Тагил, Восточное шоссе, 28</div>
+        </div>
+        <div class="footer-col">
+          <div class="footer-title">Работодатель в сети</div>
+          <a class="footer-link" href="https://trudvsem.ru/company/1086623002190" target="_blank" rel="noopener"><i class="fas fa-briefcase"></i> Работа России</a>
+          <a class="footer-link" href="https://hh.ru/employer/5855406" target="_blank" rel="noopener"><i class="fas fa-briefcase"></i> HeadHunter</a>
+          <a class="footer-link" href="https://vk.com/rabotauvz" target="_blank" rel="noopener"><i class="fas fa-comments"></i> Вакансии УВЗ ВКонтакте</a>
+        </div>
+      </div>
+      <div class="footer-bottom">Сайт — частная инициатива работника завода. Официальная информация об открытых вакансиях — у отдела кадров по телефону выше.</div>
+    </footer>
   </q-layout>
 </template>
 
@@ -270,5 +294,90 @@ export default defineComponent({
 .page-container {
   background: #f4f6fa;
   min-height: 100vh;
+}
+
+/* Footer */
+.site-footer {
+  background: #0f172a;
+  color: #cbd5e1;
+  border-top: 1px solid #1e293b;
+  font-size: 14px;
+}
+
+.footer-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+  }
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.footer-brand {
+  gap: 2px;
+}
+
+.footer-icon {
+  color: #2563eb;
+  font-size: 20px;
+}
+
+.footer-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.footer-tag {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.footer-title {
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.footer-link {
+  color: #cbd5e1;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-link:hover {
+  color: #93c5fd;
+}
+
+.footer-text {
+  color: #94a3b8;
+}
+
+.footer-bottom {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 12px 16px 20px;
+  border-top: 1px solid #1e293b;
+  color: #64748b;
+  font-size: 12.5px;
 }
 </style>
