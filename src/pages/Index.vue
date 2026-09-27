@@ -207,6 +207,13 @@ export default {
       await zayavkaStore.fetchZayavki({})
     }
     onBeforeMount(async () => {
+      // Wake the API in parallel with cache display: cold Render service
+      // takes 20-50s to boot; a fire-and-forget health ping starts the boot
+      // as early as possible while the UI already shows cached data.
+      const apiBase = (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__?.VUE_APP_API_URL) || ''
+      if (apiBase) {
+        fetch(`${apiBase}/api/health`, { mode: 'no-cors' }).catch(() => {})
+      }
       await zayavkaStore.fetchZayavki()
       await zayavkaStore.fetchStats()
     })

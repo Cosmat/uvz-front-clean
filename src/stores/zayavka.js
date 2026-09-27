@@ -40,7 +40,7 @@ export const useZayavkaStore = defineStore('zayavka', () => {
     if (isInitialLoad) {
       try {
         const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null')
-        if (cached && cached.data?.length > 0 && Date.now() - cached.ts < 10 * 60 * 1000) {
+        if (cached && cached.data?.length > 0) {
           zayavki.value = cached.data
           pagination.value = cached.pagination || pagination.value
           loading.value = false // don't block UI with skeleton, refresh silently

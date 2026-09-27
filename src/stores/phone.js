@@ -19,15 +19,29 @@ export const usePhoneStore = defineStore('phone', () => {
   async function fetchPhones(params = {}) {
     loading.value = true
     error.value = null
+    // Instant display from cache, then silent refresh
+    if (!phones.value.length) {
+      try {
+        const cached = JSON.parse(localStorage.getItem('uvz_phones_cache') || 'null')
+        if (cached && cached.data?.length > 0) {
+          phones.value = cached.data
+          pagination.value = cached.pagination || pagination.value
+          loading.value = false
+        }
+      } catch (e) { /* ignore */ }
+    }
     try {
       const response = await apiService.getPhones(params)
       const data = response?.data || []
       const pag = response?.pagination || { page: 1, limit: 100, total: 0, pages: 0 }
       phones.value = data
       pagination.value = pag
+      try {
+        localStorage.setItem('uvz_phones_cache', JSON.stringify({ data, pagination: pag, ts: Date.now() }))
+      } catch (e) { /* quota exceeded - ignore */ }
     } catch (e) {
       error.value = e.message || 'Failed to fetch phones'
-      phones.value = []
+      phones.value = phones.value.length > 0 ? phones.value : []
     } finally {
       loading.value = false
     }

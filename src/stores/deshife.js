@@ -29,15 +29,29 @@ export const useDeshifeStore = defineStore('deshife', () => {
   async function fetchDeshife(params = {}) {
     loading.value = true
     error.value = null
+    // Instant display from cache, then silent refresh
+    if (!deshife.value.length) {
+      try {
+        const cached = JSON.parse(localStorage.getItem('uvz_deshife_cache') || 'null')
+        if (cached && cached.data?.length > 0) {
+          deshife.value = cached.data
+          pagination.value = cached.pagination || pagination.value
+          loading.value = false
+        }
+      } catch (e) { /* ignore */ }
+    }
     try {
       const response = await apiService.getDeshife(params)
       const data = response?.data || []
       const pag = response?.pagination || { page: 1, limit: 100, total: 0, pages: 0 }
       deshife.value = data
       pagination.value = pag
+      try {
+        localStorage.setItem('uvz_deshife_cache', JSON.stringify({ data, pagination: pag, ts: Date.now() }))
+      } catch (e) { /* quota exceeded - ignore */ }
     } catch (e) {
       error.value = e.message || 'Failed to fetch deshife'
-      deshife.value = []
+      deshife.value = deshife.value.length > 0 ? deshife.value : []
     } finally {
       loading.value = false
     }
