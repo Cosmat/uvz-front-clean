@@ -63,14 +63,6 @@ const routes = [
       auth: false,
     },
   },
-  {
-    path: "/ai-assistant",
-    component: () => import("layouts/MainLayout.vue"),
-    children: [{ path: "", component: () => import("components/AIAssistant") }],
-    meta: {
-      auth: false,
-    },
-  },
 
   // Always leave this as last one,
   // but you can also remove it

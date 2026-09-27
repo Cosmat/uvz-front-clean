@@ -7,7 +7,7 @@
           <h1 class="hero-title">Дешифратор кодов зарплаты</h1>
           <p class="hero-sub">
             Расшифровка кодов видов оплат ·
-            <span class="hero-count">{{ pagination?.total || 0 }}</span> кодов
+            <span class="hero-count">{{ deshife?.length || 0 }}</span> кодов
           </p>
         </div>
       </div>
@@ -17,7 +17,6 @@
     <div class="toolbar">
       <q-input
         v-model="searchQuery"
-        @update:model-value="debouncedSearch"
         placeholder="Код или описание…"
         dense
         clearable
@@ -42,7 +41,6 @@
         option-label="label"
         clearable
         class="toolbar-select"
-        @update:model-value="onCategoryChange"
       />
 
       <q-btn
@@ -56,6 +54,12 @@
       />
     </div>
 
+    <!-- Result summary -->
+    <div class="result-line">
+      <span>Показано: <b>{{ filtered.length }}</b> из <b>{{ deshife?.length || 0 }}</b></span>
+      <span v-if="loading" class="loading-note">обновление…</span>
+    </div>
+
     <!-- Loading skeleton -->
     <div v-if="loading && (deshife?.length === 0)" class="table-card">
       <div v-for="i in 10" :key="'sk' + i" class="sk-row">
@@ -64,8 +68,8 @@
       </div>
     </div>
 
-    <!-- Table -->
-    <div v-else-if="deshife && deshife.length > 0" class="table-card">
+    <!-- Table: ALL codes loaded in one request, instant client-side search -->
+    <div v-else-if="filtered.length > 0" class="table-card">
       <table class="desh-table">
         <thead>
           <tr>
@@ -76,7 +80,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="item in deshife"
+            v-for="item in filtered"
             :key="item.shifr"
             class="desh-row"
             @click="copyShifr(item.shifr)"
@@ -101,19 +105,6 @@
       <q-btn unelevated rounded color="primary" label="Сбросить" @click="clearAll" />
     </div>
 
-    <!-- Pagination -->
-    <div v-if="pagination?.pages > 1 && !loading" class="pagination-wrap">
-      <q-pagination
-        v-model="pagination.page"
-        :max="pagination.pages"
-        :boundary-links="true"
-        :boundary-numbers="true"
-        @input="onPageChange"
-        color="primary"
-        rounded
-      />
-    </div>
-
     <!-- Copy toast -->
     <q-toast v-if="copiedShifr" :message="'Код ' + copiedShifr + ' скопирован'" color="positive" position="top" />
     <q-toast v-if="error" :message="error" color="negative" position="top" />
@@ -125,7 +116,6 @@ import { ref, computed, watch, onBeforeMount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useDeshifeStore } from 'stores/deshife'
 import { useQuasar } from 'quasar'
-import { debounce } from 'quasar'
 
 export default {
   name: 'PageDeshife',
@@ -137,7 +127,6 @@ export default {
       deshife,
       loading,
       error,
-      pagination,
       categories
     } = storeToRefs(deshifeStore)
 
@@ -145,43 +134,35 @@ export default {
     const selectedCategory = ref(null)
     const copiedShifr = ref(null)
 
+    // INSTANT client-side search: all ~200 codes are loaded in ONE request
+    // (limit 300 > total 209), filtering happens locally with zero API calls.
+    // Previously broken: server-side pagination ignored by the API layer and
+    // a debouncedSearch handler that was never exposed from setup().
+    const filtered = computed(() => {
+      const q = (searchQuery.value || '').trim().toLowerCase()
+      const cat = selectedCategory.value
+      let list = deshife.value || []
+      if (cat) list = list.filter(d => d.category === cat)
+      if (q) {
+        list = list.filter(d =>
+          d.shifr?.toLowerCase().includes(q) ||
+          d.description?.toLowerCase().includes(q)
+        )
+      }
+      return list
+    })
+
     const hasCategory = computed(() =>
       (deshife.value || []).some(d => d.category)
     )
 
     const categoryOptions = computed(() => [
-      { label: 'Все', value: null },
       ...(categories.value || []).map(c => ({ label: c, value: c }))
     ])
 
-    const debouncedSearch = debounce(async (value) => {
-      await deshifeStore.fetchDeshife({
-        search: value || undefined,
-        category: selectedCategory.value || undefined,
-        page: 1
-      })
-    }, 300)
-
-    async function onCategoryChange() {
-      await deshifeStore.fetchDeshife({
-        search: searchQuery.value || undefined,
-        category: selectedCategory.value || undefined,
-        page: 1
-      })
-    }
-
-    async function onPageChange(page) {
-      await deshifeStore.fetchDeshife({
-        search: searchQuery.value || undefined,
-        category: selectedCategory.value || undefined,
-        page
-      })
-    }
-
-    async function clearAll() {
+    function clearAll() {
       selectedCategory.value = null
       searchQuery.value = ''
-      await deshifeStore.fetchDeshife({ page: 1 })
     }
 
     async function copyShifr(shifr) {
@@ -196,7 +177,8 @@ export default {
     }
 
     onBeforeMount(async () => {
-      await deshifeStore.fetchDeshife({ limit: 100 })
+      // Single request loads ALL codes - no pagination needed on the page
+      await deshifeStore.fetchDeshife({ limit: 300 })
       await deshifeStore.fetchCategories()
     })
 
@@ -210,15 +192,13 @@ export default {
       searchQuery,
       selectedCategory,
       categoryOptions,
+      filtered,
       deshife,
       loading,
       error,
-      pagination,
       categories,
       copiedShifr,
       hasCategory,
-      onCategoryChange,
-      onPageChange,
       clearAll
     }
   }
@@ -294,6 +274,25 @@ export default {
 .toolbar-reset {
   color: #64748b;
   white-space: nowrap;
+}
+
+/* Result line */
+.result-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 4px 12px;
+  font-size: 13.5px;
+  color: #64748b;
+}
+
+.result-line b {
+  color: #0f172a;
+}
+
+.loading-note {
+  color: #94a3b8;
+  font-style: italic;
 }
 
 /* Table card */
@@ -418,12 +417,5 @@ export default {
 .empty-state p {
   margin: 0 0 18px;
   font-size: 14px;
-}
-
-/* Pagination */
-.pagination-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 28px 0 8px;
 }
 </style>

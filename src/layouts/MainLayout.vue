@@ -85,10 +85,6 @@
           <q-item-section avatar><i class="fas fa-phone"></i></q-item-section>
           <q-item-section>Телефоны цехов</q-item-section>
         </q-item>
-        <q-item clickable v-ripple to="/ai-assistant" @click="drawer = false">
-          <q-item-section avatar><i class="fas fa-robot"></i></q-item-section>
-          <q-item-section>AI-помощник</q-item-section>
-        </q-item>
 
         <q-separator spaced />
 
