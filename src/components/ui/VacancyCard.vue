@@ -15,7 +15,12 @@
     <div v-else class="salary salary-muted">Зарплата по договорённости</div>
 
     <!-- Description -->
-    <p v-if="item?.description" class="card-desc">{{ item.description }}</p>
+    <p v-if="item?.description" class="card-desc" :class="{ 'card-desc-open': expanded }">{{ item.description }}</p>
+    <button
+      v-if="item?.description && isLong"
+      class="desc-toggle"
+      @click.stop="expanded = !expanded"
+    >{{ expanded ? 'Свернуть' : 'Читать полностью' }} <i class="fas" :class="expanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i></button>
 
     <!-- Meta -->
     <div class="card-meta">
@@ -41,7 +46,7 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 export default {
   name: 'VacancyCard',
@@ -55,6 +60,8 @@ export default {
   emits: ['click'],
   setup(props) {
     const ruFmt = new Intl.NumberFormat('ru-RU')
+    const expanded = ref(false)
+    const isLong = computed(() => (props.item?.description || '').length > 120)
 
     const formatSalary = (min, max) => {
       if (min && max && min !== max) return `${ruFmt.format(min)} – ${ruFmt.format(max)} ₽`
@@ -81,6 +88,8 @@ export default {
     }
 
     return {
+      expanded,
+      isLong,
       formatSalary,
       formatPhone,
       formatPhoneForTel
@@ -183,6 +192,35 @@ export default {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.card-desc-open {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.desc-toggle {
+  background: none;
+  border: none;
+  padding: 0 0 10px;
+  margin: -6px 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+}
+
+.desc-toggle i {
+  font-size: 10px;
+}
+
+.desc-toggle:hover {
+  color: #1d4ed8;
 }
 
 /* Meta */
