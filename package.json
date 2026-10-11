@@ -1,7 +1,7 @@
 {
   "name": "v-08",
   "version": "0.0.10",
-  "description": "A Quasar Project",
+  "description": "Вакансии Уралвагонзавода в Нижнем Тагиле: зарплата, график, телефоны цехов. Все вакансии УВЗ в одном месте.",
   "productName": "Quasar App",
   "author": "",
   "private": true,
